@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+import { QueryProvider } from "@/lib/providers/QueryProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,13 +35,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <AuthProvider>
-          <TooltipProvider>
-            <Header />
-            <main className="flex-1 flex flex-col">{children}</main>
-            <Footer />
-          </TooltipProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Header />
+              <main className="flex-1 flex flex-col">{children}</main>
+              <Footer />
+            </TooltipProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
