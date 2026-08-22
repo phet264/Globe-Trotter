@@ -10,7 +10,7 @@ export function Header() {
   const { status, logout } = useAuth();
   const pathname = usePathname();
 
-  if (pathname.startsWith('/auth')) {
+  if (pathname.startsWith('/auth') || pathname.startsWith('/dashboard') || pathname.startsWith('/trips')) {
     return null;
   }
 

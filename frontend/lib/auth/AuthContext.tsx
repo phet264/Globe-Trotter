@@ -31,10 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(JSON.parse(storedUser));
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setStatus('authenticated');
       } catch {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setStatus('unauthenticated');
       }
     } else {

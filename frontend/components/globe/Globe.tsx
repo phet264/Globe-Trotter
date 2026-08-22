@@ -11,7 +11,7 @@ import { GlobeMarker, MarkerData } from './GlobeMarker';
 import { TravelRoutes } from './TravelRoutes';
 
 // Mock destinations with hierarchy
-const DESTINATIONS: MarkerData[] = [
+const DEFAULT_DESTINATIONS: MarkerData[] = [
   { id: '1', city: 'Paris', country: 'France', lat: 48.8566, lng: 2.3522, type: 'major' },
   { id: '2', city: 'Tokyo', country: 'Japan', lat: 35.6762, lng: 139.6503, type: 'major' },
   { id: '3', city: 'Dubai', country: 'UAE', lat: 25.2048, lng: 55.2708, type: 'major' },
@@ -21,31 +21,48 @@ const DESTINATIONS: MarkerData[] = [
 ];
 
 // Mock travel routes
-const ROUTES = [
-  { id: 'r1', startLat: 40.7128, startLng: -74.0060, endLat: 48.8566, endLng: 2.3522, type: 'flight' as const }, // NY to Paris
-  { id: 'r2', startLat: 48.8566, startLng: 2.3522, endLat: 45.7640, endLng: 4.8357, type: 'bus' as const }      // Paris to Lyon
+const DEFAULT_ROUTES = [
+  { id: 'r1', startLat: 40.7128, startLng: -74.0060, endLat: 48.8566, endLng: 2.3522, type: 'flight' as const },
+  { id: 'r2', startLat: 48.8566, startLng: 2.3522, endLat: 45.7640, endLng: 4.8357, type: 'bus' as const }
 ];
 
-export default function Globe() {
+interface GlobeProps {
+  markers?: MarkerData[];
+  routes?: any[];
+  focusedLocation?: { lat: number; lng: number } | null;
+  interactive?: boolean;
+}
+
+export default function Globe({ 
+  markers = DEFAULT_DESTINATIONS, 
+  routes = DEFAULT_ROUTES,
+  focusedLocation = null,
+  interactive = true 
+}: GlobeProps) {
   const { dpr, mode, reducedMotion } = useGlobePerformance();
-  const [focusState, setFocusState] = useState<CameraFocusState>('world');
-  const [activeTarget, setActiveTarget] = useState<{lat: number, lng: number} | null>(null);
+  const [internalFocusState, setInternalFocusState] = useState<CameraFocusState>('world');
+  const [internalActiveTarget, setInternalActiveTarget] = useState<{lat: number, lng: number} | null>(null);
   const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
+
+  // If a focusedLocation is provided via props (e.g. during trip creation), use it.
+  const activeTarget = focusedLocation || internalActiveTarget;
+  const focusState = focusedLocation ? 'city' : internalFocusState;
 
   // Handle clicking a marker
   const handleMarkerClick = useCallback((id: string) => {
-    const dest = DESTINATIONS.find(d => d.id === id);
+    if (!interactive) return;
+    const dest = markers.find(d => d.id === id);
     if (dest) {
       setActiveMarkerId(id);
-      setActiveTarget({ lat: dest.lat, lng: dest.lng });
-      setFocusState('city');
+      setInternalActiveTarget({ lat: dest.lat, lng: dest.lng });
+      setInternalFocusState('city');
     }
-  }, []);
+  }, [markers, interactive]);
 
   // When user drags, revert to world state to allow free rotation
   const handleUserInteraction = useCallback(() => {
     if (focusState !== 'world') {
-      setFocusState('world');
+      setInternalFocusState('world');
       setActiveMarkerId(null);
     }
   }, [focusState]);
@@ -55,7 +72,7 @@ export default function Globe() {
   }
 
   return (
-    <div className="w-full h-full relative cursor-grab active:cursor-grabbing">
+    <div className={`w-full h-full relative ${interactive ? 'cursor-grab active:cursor-grabbing' : ''}`}>
       <Canvas 
         camera={{ position: [0, 0, 5], fov: 45 }} 
         dpr={dpr}
@@ -74,10 +91,10 @@ export default function Globe() {
             <Countries />
             
             {/* Travel Routes */}
-            <TravelRoutes routes={ROUTES} />
+            <TravelRoutes routes={routes} />
             
             {/* Destination Markers */}
-            {DESTINATIONS.map(dest => (
+            {markers.map(dest => (
               <GlobeMarker 
                 key={dest.id} 
                 data={dest} 
