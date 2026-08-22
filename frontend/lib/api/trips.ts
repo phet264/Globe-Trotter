@@ -24,5 +24,21 @@ export const tripsApi = {
 
   reorderStops: (tripId: string, stopIds: string[]): Promise<TripStop[]> => {
     return api.patch<TripStop[]>(`/v1/trips/${tripId}/stops/reorder`, { stopIds });
+  },
+
+  shareTrip: async (id: string): Promise<{ shareLink: string }> => {
+    // Mock implementation
+    await new Promise(r => setTimeout(r, 600));
+    return { shareLink: `${window.location.origin}/shared/mock-trip-${id}` };
+  },
+
+  disableSharing: async (id: string): Promise<void> => {
+    await new Promise(r => setTimeout(r, 600));
+  },
+
+  copyTrip: async (id: string): Promise<{ newTripId: string }> => {
+    // Mock implementation for copying
+    await new Promise(r => setTimeout(r, 1200));
+    return { newTripId: `copied-trip-${Date.now()}` };
   }
 };
