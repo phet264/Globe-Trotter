@@ -92,7 +92,8 @@ export function TripWizard() {
         saveDraft(currentValues);
       }
     }
-  }, [formValues, isLoaded, showDraftPrompt, getValues, saveDraft]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(formValues), isLoaded, showDraftPrompt, getValues, saveDraft]);
 
   const handleResumeDraft = () => {
     reset(draft);
@@ -397,8 +398,7 @@ export function TripWizard() {
       </div>
 
       {/* Right side: 3D Globe Visualizer */}
-      <div className="hidden lg:block lg:w-1/2 h-full bg-slate-900 relative">
-        <div className="absolute inset-0 opacity-80 mix-blend-screen pointer-events-none z-10 bg-gradient-to-r from-slate-900/50 to-transparent" />
+      <div className="hidden lg:block lg:w-1/2 h-full bg-white relative">
         <Globe
           markers={stops.map(s => ({
             id: s.id,
@@ -410,8 +410,10 @@ export function TripWizard() {
           }))}
           routes={stops.length > 1 ? stops.map((s, i) => i < stops.length - 1 ? {
             id: `route-${i}`,
-            startMarkerId: s.id,
-            endMarkerId: stops[i+1].id,
+            startLat: s.lat,
+            startLng: s.lng,
+            endLat: stops[i+1].lat,
+            endLng: stops[i+1].lng,
             type: 'flight'
           } : null).filter(Boolean) as unknown[] : []}
           focusedLocation={focusedLocation}
@@ -419,7 +421,7 @@ export function TripWizard() {
         />
         
         {stops.length > 0 && (
-          <div className="absolute bottom-10 left-10 z-20 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center gap-3">
+          <div className="absolute bottom-10 left-10 z-20 bg-slate-900 backdrop-blur-md shadow-lg border border-slate-800 rounded-2xl p-4 flex items-center gap-3">
             <Map className="text-white/80" size={24} />
             <div>
               <div className="text-white font-medium">{stops.length} {stops.length === 1 ? 'Destination' : 'Destinations'}</div>
