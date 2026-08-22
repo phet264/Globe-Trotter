@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const DRAFT_KEY = 'globetrotter_trip_draft';
 
@@ -26,7 +26,7 @@ export function useTripDraft<T>(defaultValues: T) {
     return () => { mounted = false; };
   }, []);
 
-  const saveDraft = (data: T) => {
+  const saveDraft = useCallback((data: T) => {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
       setDraft(data);
@@ -34,9 +34,9 @@ export function useTripDraft<T>(defaultValues: T) {
     } catch (e) {
       console.error('Failed to save trip draft', e);
     }
-  };
+  }, []);
 
-  const clearDraft = () => {
+  const clearDraft = useCallback(() => {
     try {
       localStorage.removeItem(DRAFT_KEY);
       setDraft(defaultValues);
@@ -44,7 +44,7 @@ export function useTripDraft<T>(defaultValues: T) {
     } catch (e) {
       console.error('Failed to clear trip draft', e);
     }
-  };
+  }, [defaultValues]);
 
   return {
     draft,

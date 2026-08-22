@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { Stars } from '@react-three/drei';
 import { GlobeFallback } from './GlobeFallback';
 import { useGlobePerformance } from '@/lib/three/useGlobePerformance';
 import { Earth } from './Earth';
@@ -78,11 +79,13 @@ export default function Globe({
         dpr={dpr}
         gl={{ antialias: mode === 'high', alpha: true }}
       >
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[5, 3, 5]} intensity={1.2} color="#ffffff" />
-        <directionalLight position={[-5, -3, -5]} intensity={0.5} color="#4f46e5" />
+        <ambientLight intensity={1.5} color="#ffffff" />
+        <directionalLight position={[10, 5, 5]} intensity={1.0} color="#ffffff" />
+        <directionalLight position={[-10, -5, -5]} intensity={1.0} color="#ffffff" />
+        <directionalLight position={[0, 10, -10]} intensity={1.0} color="#ffffff" />
         
         <React.Suspense fallback={null}>
+          <Stars radius={100} depth={50} count={3000} factor={4} saturation={0} fade speed={0.5} />
           <group>
             {/* The Earth Surface and Atmosphere */}
             <Earth />
