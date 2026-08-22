@@ -46,7 +46,7 @@ export function CameraController({
       // Zoom out to world view
       if (!reducedMotion) {
         gsap.to(camera.position, {
-          x: 0, y: 0, z: 6,
+          x: 0, y: 0, z: 9,
           duration: 1.5,
           ease: 'power3.inOut'
         });
@@ -56,7 +56,7 @@ export function CameraController({
           ease: 'power3.inOut'
         });
       } else {
-        camera.position.set(0, 0, 6);
+        camera.position.set(0, 0, 9);
         controlsRef.current.target.set(0, 0, 0);
       }
     } else {
@@ -84,7 +84,7 @@ export function CameraController({
       ref={controlsRef}
       enableZoom={true}
       minDistance={2.1}
-      maxDistance={6}
+      maxDistance={10}
       enablePan={false}
       rotateSpeed={0.5}
       zoomSpeed={0.8}

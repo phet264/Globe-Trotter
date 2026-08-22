@@ -92,7 +92,7 @@ export default function Globe({
   return (
     <div className={`w-full h-full relative ${interactive ? 'cursor-grab active:cursor-grabbing' : ''}`}>
       <Canvas 
-        camera={{ position: [0, 0, 6], fov: 45 }} 
+        camera={{ position: [0, 0, 9], fov: 45 }} 
         dpr={dpr}
         gl={{ antialias: mode === 'high', alpha: true }}
       >

@@ -92,7 +92,8 @@ export function TripWizard() {
         saveDraft(currentValues);
       }
     }
-  }, [formValues, isLoaded, showDraftPrompt, getValues, saveDraft]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(formValues), isLoaded, showDraftPrompt, getValues, saveDraft]);
 
   const handleResumeDraft = () => {
     reset(draft);
