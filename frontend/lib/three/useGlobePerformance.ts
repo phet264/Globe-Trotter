@@ -28,9 +28,9 @@ export function useGlobePerformance() {
       initialMode = 'medium';
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setDpr(calculatedDpr);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setMode(initialMode);
 
     return () => {
