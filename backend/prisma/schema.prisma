@@ -24,6 +24,9 @@ model User {
 
   trips             Trip[]
   savedDestinations SavedDestination[]
+  travelEvents      TravelBehaviorEvent[]
+  travelPreferences TravelPreferenceProfile[]
+  travelInsights    TravelInsight[]
 }
 
 // ---------------------------------------------------------
@@ -316,4 +319,60 @@ model TripPreference {
   trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
+}
+
+// ---------------------------------------------------------
+// 15. TRAVEL BEHAVIOR EVENT (Phase 9)
+// ---------------------------------------------------------
+model TravelBehaviorEvent {
+  id          String   @id @default(uuid())
+  userId      String
+  tripId      String?
+  eventType   String   // e.g. PLACE_VIEWED, ACTIVITY_ADDED, PREFERENCE_UPDATED
+  entityType  String?
+  entityId    String?
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tripId])
+}
+
+// ---------------------------------------------------------
+// 16. TRAVEL PREFERENCE PROFILE (Phase 9)
+// ---------------------------------------------------------
+model TravelPreferenceProfile {
+  id            String   @id @default(uuid())
+  userId        String
+  category      String   // e.g. Culture, Adventure, Budget Style, Pace
+  score         Float    // 0 to 100
+  confidence    Float    // 0.0 to 1.0
+  evidenceCount Int      @default(0)
+  source        String   // EXPLICIT, INFERRED, MIXED
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------
+// 17. TRAVEL INSIGHT (Phase 9)
+// ---------------------------------------------------------
+model TravelInsight {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // e.g. PACE, BUDGET, STYLE
+  title       String
+  description String
+  confidence  Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

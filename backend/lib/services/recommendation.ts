@@ -24,7 +24,7 @@ export type ScoredPlace = Place & { matchScore: number; reason: string; distance
 
 export function calculatePlaceScore(
   place: Place,
-  trip: Trip & { preferences?: TripPreference[] },
+  trip: any,
   remainingBudget: number,
   lastLocation?: { lat: number, lng: number }
 ): { score: number, reason: string, distanceInfo?: string } {
@@ -34,17 +34,37 @@ export function calculatePlaceScore(
 
   // 1. Interest match (up to 40 points)
   let interestMatches = 0;
-  const tripInterests = trip.preferences?.map(p => p.preference) || [];
+  const tripInterests = trip.preferences?.map((p: any) => p.preference) || [];
+  let matchingTripInterest = '';
+  
   if (tripInterests.length > 0 && place.tags) {
     for (const interest of tripInterests) {
-      if (place.tags.includes(interest)) {
-        interestMatches++;
+      if (place.tags.toLowerCase().includes(interest.toLowerCase())) {
+        interestMatches += 1.5; // Trip explicit preferences have higher weight
+        matchingTripInterest = interest;
       }
     }
   }
+
+  // Phase 9: Include persistent traveler profile
+  let matchingProfileCategory = '';
+  if (trip.user?.travelPreferences && place.tags) {
+    for (const pref of trip.user.travelPreferences) {
+      // Only care about high confidence/score preferences
+      if (pref.score > 50 && place.tags.toLowerCase().includes(pref.category.toLowerCase())) {
+        interestMatches += (pref.score / 100);
+        matchingProfileCategory = pref.category;
+      }
+    }
+  }
+
   if (interestMatches > 0) {
     score += Math.min(40, interestMatches * 15);
-    reason = `Matches your interest in ${tripInterests.find(i => place.tags!.includes(i))}`;
+    if (matchingTripInterest) {
+      reason = `Matches your trip interest in ${matchingTripInterest}`;
+    } else if (matchingProfileCategory) {
+      reason = `Based on your travel style (${matchingProfileCategory})`;
+    }
   }
 
   // 2. Popularity (up to 20 points)
@@ -87,7 +107,8 @@ export async function getRecommendations(tripId: string): Promise<ScoredPlace[]>
     include: { 
       preferences: true,
       itineraryDays: { include: { activities: true } },
-      destination: true
+      destination: true,
+      user: { include: { travelPreferences: true } }
     }
   });
   if (!trip) throw new Error('Trip not found');
@@ -127,7 +148,8 @@ export async function generateSuggestedItinerary(tripId: string) {
     where: { id: tripId },
     include: { 
       preferences: true,
-      itineraryDays: { include: { activities: true }, orderBy: { dayNumber: 'asc' } } 
+      itineraryDays: { include: { activities: true }, orderBy: { dayNumber: 'asc' } },
+      user: { include: { travelPreferences: true } }
     }
   });
   if (!trip) throw new Error('Trip not found');

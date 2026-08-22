@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { tripsApi } from '@/lib/api/trips';
 import { UpcomingTripCard, TripCard } from '@/components/trip/TripCards';
+import { TravelIntelligence } from '@/components/dashboard/TravelIntelligence';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Plus, Compass, Map, MapPin, DollarSign, Bookmark, ArrowRight, AlertTriangle, RefreshCcw } from 'lucide-react';
@@ -199,6 +200,9 @@ export default function DashboardPage() {
               )}
             </div>
           </motion.section>
+
+          {/* Phase 9: Travel Intelligence */}
+          <TravelIntelligence />
 
           {/* Saved / Recommendations */}
           <motion.section

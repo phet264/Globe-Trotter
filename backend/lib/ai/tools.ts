@@ -66,6 +66,15 @@ export const getTripTools = (userId: string, tripId: string) => {
       },
     }),
 
+    get_traveler_profile: tool({
+      description: 'Get the user\'s personalized travel style, history, insights, and persistent preferences to inform your answers.',
+      parameters: z.object({}),
+      execute: async (_args: any) => {
+        const ctx = await getContext(tripId, userId);
+        return { travelerProfile: ctx.travelerProfile };
+      },
+    }),
+
     get_recommendations: tool({
       description: 'Get intelligent place/activity recommendations based on user preferences and current destination.',
       parameters: z.object({}),

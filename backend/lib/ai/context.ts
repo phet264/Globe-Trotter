@@ -19,7 +19,8 @@ export async function buildTripContext(tripId: string, userId: string) {
       transportations: true,
       preparationItems: true,
       expenses: true,
-      preferences: true
+      preferences: true,
+      user: { include: { travelPreferences: true, travelInsights: true } }
     }
   });
 
@@ -75,6 +76,14 @@ export async function buildTripContext(tripId: string, userId: string) {
         type: t.type,
         departure: t.departureLocation,
         arrival: t.arrivalLocation
+      }))
+    },
+    travelerProfile: {
+      insights: trip.user.travelInsights.map(i => i.description),
+      preferences: trip.user.travelPreferences.map(p => ({
+        category: p.category,
+        score: p.score,
+        confidence: p.confidence
       }))
     }
   };
