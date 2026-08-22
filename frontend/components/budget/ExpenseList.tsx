@@ -67,7 +67,7 @@ export default function ExpenseList({ tripId }: { tripId: string }) {
                   <h3 className="font-medium text-slate-900">{expense.description}</h3>
                   <span className="text-xs text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">{expense.category}</span>
                 </div>
-                <div className="font-bold text-slate-900">${expense.amount}</div>
+                <div className="font-bold text-slate-900">₹{expense.amount}</div>
               </div>
               <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-200">
                 <span className="text-sm text-slate-500">{new Date(expense.date).toLocaleDateString()}</span>

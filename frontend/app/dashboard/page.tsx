@@ -8,7 +8,7 @@ import { UpcomingTripCard, TripCard } from '@/components/trip/TripCards';
 import { TravelIntelligence } from '@/components/dashboard/TravelIntelligence';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Plus, Compass, Map, MapPin, DollarSign, Bookmark, ArrowRight, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { Plus, Compass, Map, MapPin, IndianRupee, Bookmark, ArrowRight, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 function DashboardSkeleton() {
@@ -151,10 +151,10 @@ export default function DashboardPage() {
                 <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-xl flex flex-col justify-between">
                   <div>
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-                      <DollarSign size={16} /> Budget Summary
+                      <IndianRupee size={16} /> Budget Summary
                     </h3>
                     <div className="text-4xl font-display font-bold mb-2">
-                      ${upcomingTrip.budget?.toLocaleString() || '0'}
+                      ₹{upcomingTrip.budget?.toLocaleString() || '0'}
                     </div>
                     <div className="text-slate-400 text-sm">Total estimated budget</div>
                   </div>
@@ -162,7 +162,7 @@ export default function DashboardPage() {
                   <div className="mt-8">
                     <div className="flex justify-between text-xs text-white/80 mb-2">
                       <span>Spent</span>
-                      <span>$0</span>
+                      <span>₹0</span>
                     </div>
                     <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
                       <div className="h-full bg-emerald-400 rounded-full" style={{ width: '0%' }} />

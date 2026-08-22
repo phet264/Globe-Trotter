@@ -49,7 +49,7 @@ export default function CityTimeline({ tripId }: CityTimelineProps) {
 
     try {
       // Reorder on backend
-      await itineraryApi.reorderActivities(items.map(i => i.id));
+      await itineraryApi.reorderActivities({ tripId: items[0]?.tripId, activityIds: items.map(i => i.id) });
     } catch (error) {
       console.error('Reorder failed', error);
       // Rollback on failure

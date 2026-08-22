@@ -7,7 +7,7 @@ import { tripsApi } from '@/lib/api/trips';
 import { itineraryApi } from '@/lib/api/itinerary';
 import { Trip, ItineraryActivity } from '@/lib/api/types';
 import { format, parseISO } from 'date-fns';
-import { Calendar, MapPin, Plane, Bus, Settings, Plus, GripVertical } from 'lucide-react';
+import { Plus, Map, Share2, Copy, FileText, Download, UserPlus, FileEdit, Settings, Plane, Bus, Search, MoreHorizontal, MoveUp, MoveDown, Calendar, MapPin, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -18,6 +18,7 @@ import { IntelligenceCenter } from './IntelligenceCenter';
 import { PreparationChecklist } from './PreparationChecklist';
 import { AccommodationForm } from './AccommodationForm';
 import { TransportationForm } from './TransportationForm';
+import { EditTripDialog } from './EditTripDialog';
 
 function SortableActivity({ activity }: { activity: ItineraryActivity }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: activity.id });
@@ -89,6 +90,9 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
   const [isAddingActivity, setIsAddingActivity] = useState(false);
   const [newActivityTitle, setNewActivityTitle] = useState('');
   const [newActivityTime, setNewActivityTime] = useState('09:00');
+  const [selectedStopId, setSelectedStopId] = useState<string>('');
+  const [isAddingStop, setIsAddingStop] = useState(false);
+  const [stopSearchQuery, setStopSearchQuery] = useState('');
 
   const addActivityMutation = useMutation({
     mutationFn: itineraryApi.addActivity,
@@ -99,14 +103,43 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     }
   });
 
+  const addStopMutation = useMutation({
+    mutationFn: (data: { city: string, country: string, lat: number, lng: number }) => tripsApi.addStop(tripId, data),
+    onSuccess: () => {
+      refetchFullTrip();
+      setIsAddingStop(false);
+      setStopSearchQuery('');
+    }
+  });
+
+  const reorderStopsMutation = useMutation({
+    mutationFn: ({ stopIds }: { stopIds: string[] }) => tripsApi.reorderStops(tripId, stopIds),
+    onSuccess: () => {
+      refetchFullTrip();
+    }
+  });
+
+  const handleMoveStop = (index: number, direction: 'up' | 'down') => {
+    if (!trip?.stops) return;
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= trip.stops.length) return;
+    
+    const newStops = [...trip.stops];
+    const temp = newStops[index];
+    newStops[index] = newStops[newIndex];
+    newStops[newIndex] = temp;
+    
+    reorderStopsMutation.mutate({ stopIds: newStops.map(s => s.id) });
+  };
+
   const reorderActivitiesMutation = useMutation({
     mutationFn: itineraryApi.reorderActivities,
-    onMutate: async (newOrderIds) => {
+    onMutate: async ({ activityIds }) => {
       await queryClient.cancelQueries({ queryKey: ['itinerary', tripId] });
       const previousActivities = queryClient.getQueryData<ItineraryActivity[]>(['itinerary', tripId]);
       
       if (previousActivities) {
-        const optimistic = newOrderIds.map(id => previousActivities.find(a => a.id === id)!);
+        const optimistic = activityIds.map(id => previousActivities.find(a => a.id === id)!);
         queryClient.setQueryData(['itinerary', tripId], optimistic);
       }
       return { previousActivities };
@@ -133,7 +166,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
       const oldIndex = activities.findIndex((a) => a.id === active.id);
       const newIndex = activities.findIndex((a) => a.id === over.id);
       const newOrder = arrayMove(activities, oldIndex, newIndex);
-      reorderActivitiesMutation.mutate(newOrder.map(a => a.id));
+      reorderActivitiesMutation.mutate({ tripId, activityIds: newOrder.map(a => a.id) });
     }
   };
 
@@ -141,7 +174,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     if (!newActivityTitle) return;
     addActivityMutation.mutate({
       tripId,
-      stopId: trip?.stops[0]?.id || 'unknown',
+      stopId: selectedStopId || trip?.stops[0]?.id || 'unknown',
       title: newActivityTitle,
       time: newActivityTime,
       day: 1
@@ -191,9 +224,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
           <div className="flex items-center gap-3 shrink-0">
             <AccommodationForm tripId={tripId} onSuccess={handleLogisticsUpdate} />
             <TransportationForm tripId={tripId} onSuccess={handleLogisticsUpdate} />
-            <Button variant="outline" className="rounded-full bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 hover:text-white">
-              <Settings size={16} className="mr-2" /> Edit Trip
-            </Button>
+            <EditTripDialog trip={trip} onSuccess={handleLogisticsUpdate} />
           </div>
         </div>
       </div>
@@ -207,10 +238,37 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
               <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-slate-200" />
               
               {trip.stops.map((stop, i) => (
-                <div key={stop.id} className="relative mb-8 last:mb-0">
+                <div key={stop.id} className="relative mb-8 last:mb-0 group">
                   <div className="absolute -left-[27px] top-1 w-5 h-5 rounded-full bg-white border-2 border-primary shadow-sm" />
-                  <h4 className="text-lg font-bold text-slate-900">{stop.city}</h4>
-                  <p className="text-sm text-slate-500 mb-4">{stop.country}</p>
+                  
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-lg font-bold text-slate-900">{stop.city}</h4>
+                      <p className="text-sm text-slate-500 mb-2">{stop.country}</p>
+                    </div>
+                    <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => handleMoveStop(i, 'up')}
+                        disabled={i === 0 || reorderStopsMutation.isPending}
+                        className="text-slate-400 hover:text-primary disabled:opacity-30 disabled:hover:text-slate-400"
+                      >
+                        <MoveUp size={14} />
+                      </button>
+                      <button 
+                        onClick={() => handleMoveStop(i, 'down')}
+                        disabled={i === trip.stops.length - 1 || reorderStopsMutation.isPending}
+                        className="text-slate-400 hover:text-primary disabled:opacity-30 disabled:hover:text-slate-400"
+                      >
+                        <MoveDown size={14} />
+                      </button>
+                    </div>
+                  </div>
+                  {stop.startDate && (
+                    <div className="text-xs text-slate-400 font-medium">
+                      {new Date(stop.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {stop.endDate ? ` - ${new Date(stop.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                    </div>
+                  )}
                   
                   {i < trip.stops.length - 1 && stop.travelToNext && (
                     <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex items-center gap-3 text-sm font-medium text-slate-600 relative z-10 -ml-2 mb-4">
@@ -222,10 +280,45 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
                   )}
                 </div>
               ))}
+
+              <div className="relative mt-8">
+                {isAddingStop ? (
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative -left-[24px] w-[calc(100%+24px)]">
+                    <label className="text-xs text-slate-500 font-medium mb-2 block">Search City</label>
+                    <Input 
+                      autoFocus 
+                      value={stopSearchQuery} 
+                      onChange={e => setStopSearchQuery(e.target.value)} 
+                      placeholder="e.g. Tokyo" 
+                      className="mb-2"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && stopSearchQuery) {
+                          addStopMutation.mutate({ city: stopSearchQuery, country: 'Unknown', lat: 0, lng: 0 });
+                        }
+                      }}
+                    />
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => setIsAddingStop(false)} className="flex-1">Cancel</Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => stopSearchQuery && addStopMutation.mutate({ city: stopSearchQuery, country: 'Unknown', lat: 0, lng: 0 })}
+                        disabled={addStopMutation.isPending || !stopSearchQuery}
+                        className="flex-1 bg-primary text-white"
+                      >
+                        {addStopMutation.isPending ? 'Adding...' : 'Add'}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button variant="outline" size="sm" className="rounded-full w-full border-dashed -ml-[12px]" onClick={() => setIsAddingStop(true)}>
+                    <Plus size={16} className="mr-2" /> Add Destination
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
           
-          <IntelligenceCenter intelligence={intelligence} currency={fullTrip?.currency || '$'} />
+          <IntelligenceCenter intelligence={intelligence} currency={fullTrip?.currency || '₹'} />
           <PreparationChecklist tripId={tripId} items={fullTrip?.preparationItems || []} onUpdate={handleLogisticsUpdate} />
         </div>
 
@@ -306,8 +399,18 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
                     <label className="text-xs text-slate-500 font-medium mb-1 block">Title</label>
                     <Input autoFocus value={newActivityTitle} onChange={e => setNewActivityTitle(e.target.value)} placeholder="e.g. Visit Eiffel Tower" className="h-10" />
                   </div>
+                  <div className="col-span-4 mt-2">
+                    <label className="text-xs text-slate-500 font-medium mb-1 block">Select Destination</label>
+                    <select 
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm bg-slate-50"
+                      value={selectedStopId || trip?.stops[0]?.id || ''}
+                      onChange={e => setSelectedStopId(e.target.value)}
+                    >
+                      {trip?.stops.map(s => <option key={s.id} value={s.id}>{s.city}, {s.country}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 mt-4">
                   <Button variant="ghost" onClick={() => setIsAddingActivity(false)}>Cancel</Button>
                   <Button onClick={handleAddActivity} disabled={addActivityMutation.isPending} className="bg-primary hover:bg-primary/90 text-white">
                     {addActivityMutation.isPending ? 'Saving...' : 'Save Activity'}

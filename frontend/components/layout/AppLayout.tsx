@@ -1,10 +1,10 @@
-'use client';
+'use client'; // Force cache invalidation
 
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { Map, Plane, Compass, Bookmark, DollarSign, User, LogOut, Menu } from 'lucide-react';
+import { Map, Plane, Compass, Bookmark, IndianRupee, User, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
@@ -12,7 +12,7 @@ const navItems = [
   { name: 'My Trips', href: '/trips', icon: Plane },
   { name: 'Explore', href: '/destinations', icon: Map },
   { name: 'Saved', href: '/saved', icon: Bookmark },
-  { name: 'Budget', href: '/budget', icon: DollarSign },
+  { name: 'Budget', href: '/budget', icon: IndianRupee },
   { name: 'Profile', href: '/profile', icon: User },
 ];
 

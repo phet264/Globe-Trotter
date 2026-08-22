@@ -119,7 +119,7 @@ model Trip {
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: Restrict)
   
-  itineraryDays     ItineraryDay[]
+  tripStops         TripStop[]
   expenses          Expense[]
   accommodations    Accommodation[]
   transportations   Transportation[]
@@ -132,21 +132,24 @@ model Trip {
 }
 
 // ---------------------------------------------------------
-// 6. ITINERARY DAY
+// 6. TRIP STOP
 // ---------------------------------------------------------
-model ItineraryDay {
+model TripStop {
   id            String   @id @default(uuid())
   tripId        String
-  dayNumber     Int
-  title         String?
-  date          DateTime?
+  city          String
+  country       String
+  latitude      Float
+  longitude     Float
+  startDate     DateTime?
+  endDate       DateTime?
+  order         Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
   activities    Activity[]
 
-  @@unique([tripId, dayNumber])
   @@index([tripId])
 }
 
@@ -155,7 +158,7 @@ model ItineraryDay {
 // ---------------------------------------------------------
 model Activity {
   id            String    @id @default(uuid())
-  itineraryDayId String
+  tripStopId    String
   placeId       String?
   title         String?
   description   String?
@@ -172,10 +175,10 @@ model Activity {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  itineraryDay  ItineraryDay @relation(fields: [itineraryDayId], references: [id], onDelete: Cascade)
+  tripStop      TripStop     @relation(fields: [tripStopId], references: [id], onDelete: Cascade)
   place         Place?       @relation(fields: [placeId], references: [id], onDelete: Restrict)
 
-  @@index([itineraryDayId])
+  @@index([tripStopId])
   @@index([placeId])
 }
 

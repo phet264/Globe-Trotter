@@ -27,8 +27,14 @@ export const tripsApi = {
     return api.delete<void>(`/v1/trips/${id}`);
   },
 
-  reorderStops: (tripId: string, stopIds: string[]): Promise<TripStop[]> => {
-    return api.patch<TripStop[]>(`/v1/trips/${tripId}/stops/reorder`, { stopIds });
+  reorderStops: async (tripId: string, stopIds: string[]): Promise<TripStop[]> => {
+    const res = await api.patch<{ stops: TripStop[] }>(`/v1/trips/${tripId}/stops/reorder`, { stopIds });
+    return res.stops;
+  },
+
+  addStop: async (tripId: string, data: { city: string, country: string, lat: number, lng: number }): Promise<TripStop> => {
+    const res = await api.post<{ stop: TripStop }>(`/v1/trips/${tripId}/stops`, data);
+    return res.stop;
   },
 
   shareTrip: async (id: string): Promise<{ shareLink: string }> => {

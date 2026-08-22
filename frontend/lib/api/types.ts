@@ -24,8 +24,8 @@ export interface TripStop {
   lat: number;
   lng: number;
   order: number;
-  arrivalDate?: string;
-  departureDate?: string;
+  startDate?: string;
+  endDate?: string;
   coverImage?: string;
   travelToNext?: TravelMode; 
 }

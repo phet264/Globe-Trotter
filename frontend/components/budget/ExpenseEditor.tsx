@@ -83,7 +83,7 @@ export default function ExpenseEditor({ tripId, expense, onClose, onSave }: Expe
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="amount" className="text-right">Amount ($)</Label>
+            <Label htmlFor="amount" className="text-right">Amount (₹)</Label>
             <div className="col-span-3">
               <Input id="amount" name="amount" type="number" step="0.01" value={formData.amount} onChange={handleChange} />
               {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}

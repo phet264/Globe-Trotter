@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Activity } from '@/lib/api/types';
-import { Clock, DollarSign, Plus } from 'lucide-react';
+import { Clock, IndianRupee, Plus } from 'lucide-react';
 
 const getMockImage = (name: string) => {
   const seed = name.toLowerCase().replace(/[^a-z]/g, '');
@@ -41,7 +41,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
               </div>
             )}
             <div className="flex items-center gap-1.5">
-              <DollarSign size={16} className="text-slate-400" />
+              <IndianRupee size={16} className="text-slate-400" />
               {activity.estimatedCost}
             </div>
           </div>

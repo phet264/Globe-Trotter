@@ -27,6 +27,17 @@ export async function POST(req: Request) {
     const startDate = new Date(body.startDate);
     const endDate = new Date(body.endDate);
     
+    // Assign a dynamic placeholder image if none provided
+    // In a real app we'd use Unsplash API based on destination, here we use random beautiful travel images
+    const placeholderImages = [
+      'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80', // Mountains/Lake
+      'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&q=80', // Paris
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80', // Beach
+      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80', // Dubai
+      'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80', // New York
+    ];
+    const defaultImage = body.coverImage || placeholderImages[Math.floor(Math.random() * placeholderImages.length)];
+    
     const trip = await prisma.trip.create({
       data: {
         userId: user.id,
@@ -38,23 +49,20 @@ export async function POST(req: Request) {
         travelers: body.travelers || 1,
         budget: body.budget,
         currency: body.currency,
-        coverImage: body.coverImage,
+        coverImage: defaultImage,
       }
     });
 
-    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    if (daysDiff > 0 && daysDiff <= 30) {
-      const stops = Array.from({ length: daysDiff }).map((_, index) => {
-        const dayDate = new Date(startDate);
-        dayDate.setDate(dayDate.getDate() + index);
-        return {
-          tripId: trip.id,
-          dayNumber: index + 1,
-          date: dayDate,
-          title: `Day ${index + 1}`
-        };
-      });
-      await prisma.itineraryDay.createMany({ data: stops });
+    if (body.stops && Array.isArray(body.stops)) {
+      const tripStops = body.stops.map((stop: any, index: number) => ({
+        tripId: trip.id,
+        city: stop.city,
+        country: stop.country,
+        latitude: stop.lat,
+        longitude: stop.lng,
+        order: index
+      }));
+      await prisma.tripStop.createMany({ data: tripStops });
     }
 
     return NextResponse.json(successResponse({ trip: { ...trip, name: trip.title } }));

@@ -55,7 +55,7 @@ export default function BudgetCharts({ tripId }: { tripId: string }) {
             <CardTitle className="text-sm font-medium text-slate-500">Total Budget</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${summary.totalBudget.toLocaleString()}</div>
+            <div className="text-2xl font-bold">₹{summary.totalBudget.toLocaleString()}</div>
           </CardContent>
         </Card>
         <Card>
@@ -63,7 +63,7 @@ export default function BudgetCharts({ tripId }: { tripId: string }) {
             <CardTitle className="text-sm font-medium text-slate-500">Spent</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">${summary.spent.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-slate-900">₹{summary.spent.toLocaleString()}</div>
           </CardContent>
         </Card>
         <Card>
@@ -72,7 +72,7 @@ export default function BudgetCharts({ tripId }: { tripId: string }) {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${summary.remaining < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
-              ${summary.remaining.toLocaleString()}
+              ₹{summary.remaining.toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -99,7 +99,7 @@ export default function BudgetCharts({ tripId }: { tripId: string }) {
             <CardTitle className="text-lg">Category Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300} minWidth={1} minHeight={1}>
               <PieChart>
                 <Pie
                   data={summary.categoryBreakdown}
@@ -115,7 +115,7 @@ export default function BudgetCharts({ tripId }: { tripId: string }) {
                     <Cell key={`cell-${index}`} fill={COLORS[entry.category] || COLORS.Other} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: any) => `$${value}`} />
+                <Tooltip formatter={(value: any) => `₹${value}`} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -127,11 +127,11 @@ export default function BudgetCharts({ tripId }: { tripId: string }) {
             <CardTitle className="text-lg">Daily Spending</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300} minWidth={1} minHeight={1}>
               <BarChart data={summary.dailySpending}>
                 <XAxis dataKey="date" tick={{fontSize: 12}} tickFormatter={(val) => new Date(val).toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} />
                 <YAxis tick={{fontSize: 12}} />
-                <Tooltip formatter={(value: any) => `$${value}`} />
+                <Tooltip formatter={(value: any) => `₹${value}`} />
                 <Bar dataKey="amount" fill="#3B82F6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

@@ -9,7 +9,7 @@ import Globe from '@/components/globe/Globe';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, CheckCircle2, ChevronRight, ChevronLeft, Map, Calendar, Heart, DollarSign } from 'lucide-react';
+import { Search, MapPin, CheckCircle2, ChevronRight, ChevronLeft, Map, Calendar, Heart, IndianRupee } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -80,9 +80,11 @@ export function TripWizard() {
 
   useEffect(() => {
     if (isLoaded && hasDraft) {
-      setShowDraftPrompt(true);
+      // User requested to remove the "Resume Trip" screen.
+      // Automatically clear old drafts to always start fresh.
+      clearDraft(); 
     }
-  }, [isLoaded, hasDraft]);
+  }, [isLoaded, hasDraft, clearDraft]);
 
   // Save draft on every change
   useEffect(() => {
@@ -314,7 +316,7 @@ export function TripWizard() {
                 
                 <Controller name="budget" control={control} render={({ field }) => (
                   <div className="relative max-w-sm">
-                    <DollarSign className="absolute left-4 top-3.5 text-slate-400" size={20} />
+                    <IndianRupee className="absolute left-4 top-3.5 text-slate-400" size={20} />
                     <Input 
                       type="number" 
                       placeholder="e.g. 5000" 
@@ -341,8 +343,8 @@ export function TripWizard() {
                   </div>
                   {formValues.budget && (
                     <div className="flex gap-2 text-slate-600 font-medium">
-                      <DollarSign size={18} />
-                      ${formValues.budget.toLocaleString()} Total Budget
+                      <IndianRupee size={18} />
+                      ₹{formValues.budget.toLocaleString()} Total Budget
                     </div>
                   )}
                   {formValues.interests.length > 0 && (
