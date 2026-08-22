@@ -12,6 +12,11 @@ import { Input } from '@/components/ui/input';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { api } from '@/lib/api/client';
+import { IntelligenceCenter } from './IntelligenceCenter';
+import { PreparationChecklist } from './PreparationChecklist';
+import { AccommodationForm } from './AccommodationForm';
+import { TransportationForm } from './TransportationForm';
 
 function SortableActivity({ activity }: { activity: ItineraryActivity }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: activity.id });
@@ -58,6 +63,27 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
     queryKey: ['itinerary', tripId],
     queryFn: () => itineraryApi.getActivities(tripId)
   });
+
+  const { data: fullTrip, refetch: refetchFullTrip } = useQuery({
+    queryKey: ['trip-full', tripId],
+    queryFn: async () => {
+      const res = await api.get<{ trip: any }>(`/v1/trips/${tripId}`);
+      return res.trip;
+    }
+  });
+
+  const { data: intelligence, refetch: refetchIntelligence } = useQuery({
+    queryKey: ['intelligence', tripId],
+    queryFn: async () => {
+      const res = await api.get<any>(`/v1/trips/${tripId}/intelligence`);
+      return res.cost ? res : null;
+    }
+  });
+
+  const handleLogisticsUpdate = () => {
+    refetchFullTrip();
+    refetchIntelligence();
+  };
 
   const [isAddingActivity, setIsAddingActivity] = useState(false);
   const [newActivityTitle, setNewActivityTitle] = useState('');
@@ -162,6 +188,8 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
           </div>
           
           <div className="flex items-center gap-3 shrink-0">
+            <AccommodationForm tripId={tripId} onSuccess={handleLogisticsUpdate} />
+            <TransportationForm tripId={tripId} onSuccess={handleLogisticsUpdate} />
             <Button variant="outline" className="rounded-full bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 hover:text-white">
               <Settings size={16} className="mr-2" /> Edit Trip
             </Button>
@@ -195,6 +223,9 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
               ))}
             </div>
           </div>
+          
+          <IntelligenceCenter intelligence={intelligence} currency={fullTrip?.currency || '$'} />
+          <PreparationChecklist tripId={tripId} items={fullTrip?.preparationItems || []} onUpdate={handleLogisticsUpdate} />
         </div>
 
         {/* Right Column: Itinerary */}
@@ -217,15 +248,50 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
                 </Button>
               </div>
             ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={activities.map(a => a.id)} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-4">
-                    {activities.map((activity) => (
-                      <SortableActivity key={activity.id} activity={activity} />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
+              (() => {
+                const allEvents: any[] = [];
+                activities.forEach(a => {
+                  allEvents.push({ ...a, eventType: 'ACTIVITY' });
+                });
+              
+                if (fullTrip) {
+                  fullTrip.accommodations?.forEach((a: any) => {
+                    allEvents.push({ id: `acc-in-${a.id}`, eventType: 'ACCOMMODATION', time: a.checkInTime || '14:00', title: `Check-in: ${a.name}`, subtitle: a.address, icon: '🛏️' });
+                    allEvents.push({ id: `acc-out-${a.id}`, eventType: 'ACCOMMODATION', time: a.checkOutTime || '11:00', title: `Check-out: ${a.name}`, icon: '🗝️' });
+                  });
+                  fullTrip.transportations?.forEach((t: any) => {
+                    allEvents.push({ id: `trans-${t.id}`, eventType: 'TRANSPORT', time: t.departureTime || '08:00', title: `${t.type}: ${t.departureLocation} → ${t.arrivalLocation}`, subtitle: t.provider, icon: '✈️' });
+                  });
+                }
+              
+                allEvents.sort((a, b) => (a.time || '23:59').localeCompare(b.time || '23:59'));
+
+                return (
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={activities.map(a => a.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-4">
+                        {allEvents.map((event) => {
+                          if (event.eventType === 'ACTIVITY') {
+                            return <SortableActivity key={event.id} activity={event} />;
+                          }
+                          return (
+                            <div key={event.id} className="flex bg-slate-50 rounded-2xl border border-slate-200 p-4 gap-4 items-center">
+                               <div className="text-2xl w-8 text-center">{event.icon}</div>
+                               <div className="flex flex-col items-center shrink-0 w-12">
+                                 <span className="text-sm font-bold text-slate-500">{event.time}</span>
+                               </div>
+                               <div className="flex-1 min-w-0">
+                                 <h4 className="font-bold text-slate-700 truncate text-base">{event.title}</h4>
+                                 {event.subtitle && <p className="text-sm text-slate-500 line-clamp-2 mt-1">{event.subtitle}</p>}
+                               </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                );
+              })()
             )}
 
             {isAddingActivity ? (

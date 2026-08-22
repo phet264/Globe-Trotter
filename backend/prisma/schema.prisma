@@ -127,9 +127,12 @@ model Trip {
   updatedAt   DateTime   @updatedAt
 
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tripStops   TripStop[]
-  expenses    Expense[]
-  sharedTrip  SharedTrip?
+  tripStops         TripStop[]
+  expenses          Expense[]
+  accommodations    Accommodation[]
+  transportations   Transportation[]
+  preparationItems  PreparationItem[]
+  sharedTrip        SharedTrip?
 
   @@index([userId])
 }
@@ -236,4 +239,79 @@ model SharedTrip {
   createdAt DateTime  @default(now())
 
   trip      Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------
+// 11. ACCOMMODATION
+// ---------------------------------------------------------
+model Accommodation {
+  id               String   @id @default(uuid())
+  tripId           String
+  name             String
+  address          String?
+  checkInDate      DateTime @db.Date
+  checkOutDate     DateTime @db.Date
+  checkInTime      String?  // e.g. "14:00"
+  checkOutTime     String?  // e.g. "11:00"
+  nights           Int
+  pricePerNight    Decimal? @db.Decimal(10, 2)
+  totalCost        Decimal  @db.Decimal(10, 2)
+  currency         String   @default("USD")
+  guests           Int      @default(1)
+  bookingReference String?
+  notes            String?
+  latitude         Float?
+  longitude        Float?
+  imageUrl         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  trip             Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+// ---------------------------------------------------------
+// 12. TRANSPORTATION
+// ---------------------------------------------------------
+model Transportation {
+  id                String   @id @default(uuid())
+  tripId            String
+  type              String   // e.g., Flight, Train, Bus, Car, Taxi, Metro, Other
+  provider          String?
+  departureLocation String
+  arrivalLocation   String
+  departureDate     DateTime @db.Date
+  departureTime     String?  // e.g. "08:30"
+  arrivalDate       DateTime @db.Date
+  arrivalTime       String?  // e.g. "10:45"
+  cost              Decimal  @db.Decimal(10, 2)
+  currency          String   @default("USD")
+  bookingReference  String?
+  notes             String?
+  latitude          Float?
+  longitude         Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  trip              Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+// ---------------------------------------------------------
+// 13. PREPARATION ITEM
+// ---------------------------------------------------------
+model PreparationItem {
+  id          String   @id @default(uuid())
+  tripId      String
+  category    String   // Documents, Clothing, Electronics, etc.
+  name        String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
 }

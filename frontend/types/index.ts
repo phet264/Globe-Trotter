@@ -57,6 +57,9 @@ export interface Trip {
   createdAt: string;
   updatedAt: string;
   tripStops?: TripStop[]; // nested data
+  accommodations?: Accommodation[];
+  transportations?: Transportation[];
+  preparationItems?: PreparationItem[];
 }
 
 export interface TripStop {
@@ -112,4 +115,80 @@ export interface SharedTrip {
   token: string;
   permissions: 'view' | 'edit';
   expiresAt?: string;
+}
+
+export interface Accommodation {
+  id: string;
+  tripId: string;
+  name: string;
+  address?: string;
+  checkInDate: string;
+  checkOutDate: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  nights: number;
+  pricePerNight?: number;
+  totalCost: number;
+  currency: string;
+  guests: number;
+  bookingReference?: string;
+  notes?: string;
+  latitude?: number;
+  longitude?: number;
+  imageUrl?: string;
+}
+
+export interface Transportation {
+  id: string;
+  tripId: string;
+  type: string;
+  provider?: string;
+  departureLocation: string;
+  arrivalLocation: string;
+  departureDate: string;
+  departureTime?: string;
+  arrivalDate: string;
+  arrivalTime?: string;
+  cost: number;
+  currency: string;
+  bookingReference?: string;
+  notes?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface PreparationItem {
+  id: string;
+  tripId: string;
+  category: string;
+  name: string;
+  isCompleted: boolean;
+}
+
+export interface TripIntelligence {
+  cost: {
+    totalBudget: number;
+    totalProjected: number;
+    remaining: number;
+    perTraveler: number;
+    perDay: number;
+    breakdown: {
+      accommodation: number;
+      transportation: number;
+      activities: number;
+      food: number;
+      miscellaneous: number;
+    };
+  };
+  conflicts: {
+    id: string;
+    severity: 'INFO' | 'WARNING' | 'ERROR';
+    message: string;
+    relatedItems?: any[];
+  }[];
+  readiness: {
+    score: number; // 0-100
+    completedChecks: string[];
+    pendingChecks: string[];
+  };
 }

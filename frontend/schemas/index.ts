@@ -52,3 +52,37 @@ export const ActivitySchema = z.object({
   estimatedCost: z.number().nonnegative().optional(),
   imageUrl: z.string().url().optional(),
 });
+
+export const AccommodationSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  address: z.string().optional(),
+  checkInDate: z.string(),
+  checkOutDate: z.string(),
+  checkInTime: z.string().optional(),
+  checkOutTime: z.string().optional(),
+  nights: z.number().int().min(1),
+  pricePerNight: z.number().nonnegative().optional(),
+  guests: z.number().int().min(1).default(1),
+  bookingReference: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const TransportationSchema = z.object({
+  type: z.string().min(1, "Type is required"),
+  provider: z.string().optional(),
+  departureLocation: z.string().min(1, "Departure location required"),
+  arrivalLocation: z.string().min(1, "Arrival location required"),
+  departureDate: z.string(),
+  departureTime: z.string().optional(),
+  arrivalDate: z.string(),
+  arrivalTime: z.string().optional(),
+  cost: z.number().nonnegative(),
+  bookingReference: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const PreparationItemSchema = z.object({
+  category: z.string().min(1, "Category is required"),
+  name: z.string().min(1, "Name is required"),
+  isCompleted: z.boolean().default(false),
+});
