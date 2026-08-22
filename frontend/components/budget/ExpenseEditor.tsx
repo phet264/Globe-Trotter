@@ -61,11 +61,12 @@ export default function ExpenseEditor({ tripId, expense, onClose, onSave }: Expe
       onClose();
     } catch (error: any) {
       if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((e: any) => {
-          if (e.path[0]) newErrors[e.path[0].toString()] = e.message;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const fieldErrors: any = {};
+        (error as any).errors.forEach((err: any) => {
+          if (err.path[0]) fieldErrors[err.path[0]] = err.message;
         });
-        setErrors(newErrors);
+        setErrors(fieldErrors);
       } else {
         console.error('Failed to save expense', error);
       }
