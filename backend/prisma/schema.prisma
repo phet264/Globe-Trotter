@@ -87,8 +87,16 @@ model Activity {
   name          String
   description   String?
   category      String
+  tags          String[] // Phase 5
   estimatedCost Decimal  @db.Decimal(10, 2)
   duration      Int?     // duration in minutes
+  latitude      Float?   // Phase 5
+  longitude     Float?   // Phase 5
+  imageUrl      String?  // Phase 5
+  rating        Float?   // Phase 5
+  popularity    Int?     // Phase 5 (1-100)
+  openingTime   String?  // Phase 5 (e.g. "09:00")
+  closingTime   String?  // Phase 5 (e.g. "18:00")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -113,6 +121,7 @@ model Trip {
   budget      Decimal?   @db.Decimal(12, 2)
   currency    String?
   coverImage  String?
+  interests   String[]   // Phase 5
   status      TripStatus @default(PLANNED)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
