@@ -6,15 +6,15 @@ const MOCK_USER_ID = 'test-user-id';
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ cityId: string }> }
+  { params }: { params: Promise<{ destinationId: string }> }
 ) {
   try {
-    const { cityId } = await params;
+    const { destinationId } = await params;
     
     await prisma.savedDestination.deleteMany({
       where: {
         userId: MOCK_USER_ID,
-        cityId,
+        destinationId,
       }
     });
 

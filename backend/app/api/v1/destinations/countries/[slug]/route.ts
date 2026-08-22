@@ -12,7 +12,7 @@ export async function GET(
     const country = await prisma.country.findUnique({
       where: { slug },
       include: {
-        cities: {
+        destinations: {
           orderBy: { name: 'asc' },
           take: 10,
         },

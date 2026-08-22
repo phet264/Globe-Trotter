@@ -10,7 +10,7 @@ export async function DELETE(req: Request, props: { params: Promise<{ activityId
     await requireAuthenticatedUser(); // We can implement deeper trip ownership check here for production
     const { activityId } = await props.params;
     
-    await prisma.itineraryActivity.delete({
+    await prisma.activity.delete({
       where: { id: activityId }
     });
 

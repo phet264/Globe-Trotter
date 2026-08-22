@@ -1,4 +1,4 @@
-import { Activity, Trip, TripStop, ItineraryActivity } from '@prisma/client';
+import { Place, Trip, ItineraryDay, Activity, TripPreference } from '@prisma/client';
 import { prisma } from '../db/prisma';
 
 // Haversine distance formula
@@ -20,11 +20,11 @@ function deg2rad(deg: number) {
   return deg * (Math.PI/180)
 }
 
-export type ScoredActivity = Activity & { matchScore: number; reason: string; distanceInfo?: string };
+export type ScoredPlace = Place & { matchScore: number; reason: string; distanceInfo?: string };
 
 export function calculatePlaceScore(
-  activity: Activity,
-  trip: Trip,
+  place: Place,
+  trip: Trip & { preferences?: TripPreference[] },
   remainingBudget: number,
   lastLocation?: { lat: number, lng: number }
 ): { score: number, reason: string, distanceInfo?: string } {
@@ -34,25 +34,26 @@ export function calculatePlaceScore(
 
   // 1. Interest match (up to 40 points)
   let interestMatches = 0;
-  if (trip.interests && activity.tags) {
-    for (const interest of trip.interests) {
-      if (activity.tags.includes(interest)) {
+  const tripInterests = trip.preferences?.map(p => p.preference) || [];
+  if (tripInterests.length > 0 && place.tags) {
+    for (const interest of tripInterests) {
+      if (place.tags.includes(interest)) {
         interestMatches++;
       }
     }
   }
   if (interestMatches > 0) {
     score += Math.min(40, interestMatches * 15);
-    reason = `Matches your interest in ${trip.interests.find(i => activity.tags.includes(i))}`;
+    reason = `Matches your interest in ${tripInterests.find(i => place.tags!.includes(i))}`;
   }
 
   // 2. Popularity (up to 20 points)
-  if (activity.popularity) {
-    score += (activity.popularity / 100) * 20;
+  if (place.popularity) {
+    score += (place.popularity / 100) * 20;
   }
 
   // 3. Budget (up to 20 points)
-  const cost = Number(activity.estimatedCost);
+  const cost = Number(place.estimatedCost);
   if (cost === 0) {
     score += 20;
     if (interestMatches === 0) reason = 'Great free activity';
@@ -66,8 +67,8 @@ export function calculatePlaceScore(
   }
 
   // 4. Location Relevance (up to 20 points)
-  if (lastLocation && activity.latitude && activity.longitude) {
-    const distKm = getDistanceFromLatLonInKm(lastLocation.lat, lastLocation.lng, activity.latitude, activity.longitude);
+  if (lastLocation && place.latitude && place.longitude) {
+    const distKm = getDistanceFromLatLonInKm(lastLocation.lat, lastLocation.lng, place.latitude, place.longitude);
     distanceInfo = `~${distKm.toFixed(1)} km away`;
     if (distKm < 2) {
       score += 20;
@@ -80,20 +81,24 @@ export function calculatePlaceScore(
   return { score: Math.max(0, Math.min(100, score)), reason, distanceInfo };
 }
 
-export async function getRecommendations(tripId: string): Promise<ScoredActivity[]> {
+export async function getRecommendations(tripId: string): Promise<ScoredPlace[]> {
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
-    include: { tripStops: { include: { activities: true } } }
+    include: { 
+      preferences: true,
+      itineraryDays: { include: { activities: true } },
+      destination: true
+    }
   });
   if (!trip) throw new Error('Trip not found');
 
   // get all planned activities
-  const plannedActivityIds = trip.tripStops.flatMap(ts => ts.activities.map(a => a.activityId)).filter(Boolean);
+  const plannedPlaceIds = trip.itineraryDays.flatMap(day => day.activities.map(a => a.placeId)).filter(Boolean);
   
   // get total planned cost
   let plannedCost = 0;
-  trip.tripStops.forEach(ts => {
-    ts.activities.forEach(a => {
+  trip.itineraryDays.forEach(day => {
+    day.activities.forEach(a => {
       if (a.estimatedCost) plannedCost += Number(a.estimatedCost);
     });
   });
@@ -101,19 +106,16 @@ export async function getRecommendations(tripId: string): Promise<ScoredActivity
   const remainingBudget = Math.max(0, Number(trip.budget || 0) - plannedCost);
 
   // find available
-  const cities = await prisma.city.findMany();
-  const matchedCity = cities.find(c => trip.destination.toLowerCase().includes(c.name.toLowerCase()));
-
-  const availableActivities = await prisma.activity.findMany({
+  const availablePlaces = await prisma.place.findMany({
     where: {
-      id: { notIn: plannedActivityIds as string[] },
-      ...(matchedCity ? { cityId: matchedCity.id } : {})
+      id: { notIn: plannedPlaceIds as string[] },
+      ...(trip.destinationId ? { destinationId: trip.destinationId } : {})
     }
   });
 
-  const scored = availableActivities.map(act => {
-    const { score, reason, distanceInfo } = calculatePlaceScore(act, trip, remainingBudget);
-    return { ...act, matchScore: score, reason, distanceInfo };
+  const scored = availablePlaces.map(place => {
+    const { score, reason, distanceInfo } = calculatePlaceScore(place, trip, remainingBudget);
+    return { ...place, matchScore: score, reason, distanceInfo };
   });
 
   // Sort by score
@@ -123,24 +125,27 @@ export async function getRecommendations(tripId: string): Promise<ScoredActivity
 export async function generateSuggestedItinerary(tripId: string) {
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
-    include: { tripStops: { include: { activities: true }, orderBy: { order: 'asc' } } }
+    include: { 
+      preferences: true,
+      itineraryDays: { include: { activities: true }, orderBy: { dayNumber: 'asc' } } 
+    }
   });
   if (!trip) throw new Error('Trip not found');
 
   let recommendations = await getRecommendations(tripId);
   
   let plannedCost = 0;
-  trip.tripStops.forEach(ts => ts.activities.forEach(a => plannedCost += Number(a.estimatedCost || 0)));
+  trip.itineraryDays.forEach(day => day.activities.forEach(a => plannedCost += Number(a.estimatedCost || 0)));
   let budget = Number(trip.budget || 0);
 
-  const newActivities: ItineraryActivity[] = [];
+  const newActivities: Activity[] = [];
   
-  for (const stop of trip.tripStops) {
+  for (const day of trip.itineraryDays) {
     let currentDayMinutes = 0;
     let lastLat: number | undefined;
     let lastLng: number | undefined;
     
-    stop.activities.forEach(a => {
+    day.activities.forEach(a => {
       currentDayMinutes += 120; // Avg 2 hours
       // We could try to fetch coords of existing, but skip for simplicity
     });
@@ -149,41 +154,41 @@ export async function generateSuggestedItinerary(tripId: string) {
     while (currentDayMinutes < 360 && recommendations.length > 0) {
       // Re-score based on last location and budget
       const remainingBudget = budget > 0 ? Math.max(0, budget - plannedCost) : 0;
-      const rescored = recommendations.map(act => {
+      const rescored = recommendations.map(place => {
         const { score, reason, distanceInfo } = calculatePlaceScore(
-          act, 
+          place, 
           trip, 
           remainingBudget, 
           lastLat && lastLng ? { lat: lastLat, lng: lastLng } : undefined
         );
-        return { ...act, matchScore: score, reason, distanceInfo };
+        return { ...place, matchScore: score, reason, distanceInfo };
       }).sort((a, b) => b.matchScore - a.matchScore);
 
       const top = rescored[0];
       
-      const activityDuration = top.duration || 120;
+      const placeDuration = top.duration || 120;
       
       // Stop if adding this exceeds 8 hours (480 mins)
-      if (currentDayMinutes + activityDuration > 480) {
+      if (currentDayMinutes + placeDuration > 480) {
         break;
       }
 
-      const newAct = await prisma.itineraryActivity.create({
+      const newAct = await prisma.activity.create({
         data: {
-          tripStopId: stop.id,
-          activityId: top.id,
+          itineraryDayId: day.id,
+          placeId: top.id,
           title: top.name,
           description: top.description,
           category: top.category,
           estimatedCost: top.estimatedCost,
           imageUrl: top.imageUrl,
-          order: stop.activities.length + newActivities.filter(na => na.tripStopId === stop.id).length + 1,
+          order: day.activities.length + newActivities.filter(na => na.itineraryDayId === day.id).length + 1,
           notes: `Suggested: ${top.reason}`
         }
       });
       newActivities.push(newAct);
 
-      currentDayMinutes += activityDuration;
+      currentDayMinutes += placeDuration;
       plannedCost += Number(top.estimatedCost);
       if (top.latitude && top.longitude) {
         lastLat = top.latitude;

@@ -32,7 +32,7 @@ function runTests() {
     expenses: [
       { id: 'e1', category: 'FOOD', amount: 50 }
     ],
-    tripStops: [
+    itineraryDays: [
       {
         id: 'ts1',
         order: 1,

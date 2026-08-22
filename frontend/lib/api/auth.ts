@@ -7,7 +7,7 @@ export interface User {
   avatarUrl?: string;
 }
 
-const BASE_URL = 'http://localhost:3001/api/v1';
+const BASE_URL = '/api/v1';
 
 export const authApi = {
   login: async (data: Record<string, unknown>) => {
@@ -18,7 +18,7 @@ export const authApi = {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error?.message || 'Login failed');
-    return { user: json.data.user, token: json.data.token };
+    return { user: json.data.user };
   },
   
   signup: async (data: Record<string, unknown>) => {
@@ -29,12 +29,18 @@ export const authApi = {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error?.message || 'Signup failed');
-    return { user: json.data.user, token: json.data.token };
+    return { user: json.data.user };
   },
 
   logout: async () => {
-    // Just mock logout on the frontend for now, clearing the local token
-    return new Promise<void>((resolve) => setTimeout(resolve, 500));
+    await fetch(`${BASE_URL}/auth/logout`, { method: 'POST' });
+  },
+  
+  me: async () => {
+    const res = await fetch(`${BASE_URL}/auth/me`);
+    const json = await res.json();
+    if (!res.ok) throw new Error('Not authenticated');
+    return { user: json.data.user };
   },
 
   forgotPassword: async (_data: { email: string }) => {

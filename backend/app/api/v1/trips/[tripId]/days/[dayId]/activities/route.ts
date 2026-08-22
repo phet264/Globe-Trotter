@@ -16,9 +16,9 @@ export async function POST(req: Request, props: { params: Promise<{ tripId: stri
 
     const body = await req.json();
     
-    const activity = await prisma.itineraryActivity.create({
+    const activity = await prisma.activity.create({
       data: {
-        tripStopId: dayId,
+        itineraryDayId: dayId,
         title: body.title,
         description: body.description,
         location: body.location,

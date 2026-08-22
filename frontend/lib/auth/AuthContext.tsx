@@ -23,29 +23,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check local storage for session on mount
-    const token = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('auth_user');
-
-    if (token && storedUser) {
+    const checkAuth = async () => {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setUser(JSON.parse(storedUser));
-         
+        const res = await authApi.me();
+        setUser(res.user);
         setStatus('authenticated');
       } catch {
-         
+        setUser(null);
         setStatus('unauthenticated');
       }
-    } else {
-      setStatus('unauthenticated');
-    }
+    };
+    checkAuth();
   }, []);
 
   const login = async (data: Record<string, unknown>) => {
     const res = await authApi.login(data);
-    localStorage.setItem('auth_token', res.token);
-    localStorage.setItem('auth_user', JSON.stringify(res.user));
     setUser(res.user);
     setStatus('authenticated');
     
@@ -61,8 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = async (data: Record<string, unknown>) => {
     const res = await authApi.signup(data);
-    localStorage.setItem('auth_token', res.token);
-    localStorage.setItem('auth_user', JSON.stringify(res.user));
     setUser(res.user);
     setStatus('authenticated');
     
@@ -77,8 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await authApi.logout();
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
     setUser(null);
     setStatus('unauthenticated');
     router.push('/auth/login');

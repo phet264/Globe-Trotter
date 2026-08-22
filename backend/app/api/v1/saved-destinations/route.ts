@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     const saved = await prisma.savedDestination.findMany({
       where: { userId: MOCK_USER_ID }, // TODO: replace with real user auth
-      include: { city: { include: { country: true } } },
+      include: { destination: { include: { country: true } } },
       orderBy: { createdAt: 'desc' }
     });
 
@@ -28,11 +28,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { cityId } = body;
+    const { destinationId } = body;
 
-    if (!cityId) {
+    if (!destinationId) {
       return NextResponse.json(
-        { success: false, error: { code: 'BAD_REQUEST', message: 'cityId is required' } },
+        { success: false, error: { code: 'BAD_REQUEST', message: 'destinationId is required' } },
         { status: 400 }
       );
     }
@@ -52,17 +52,17 @@ export async function POST(req: NextRequest) {
 
     const saved = await prisma.savedDestination.upsert({
       where: {
-        userId_cityId: {
+        userId_destinationId: {
           userId: MOCK_USER_ID,
-          cityId,
+          destinationId,
         }
       },
       update: {},
       create: {
         userId: MOCK_USER_ID,
-        cityId,
+        destinationId,
       },
-      include: { city: { include: { country: true } } }
+      include: { destination: { include: { country: true } } }
     });
 
     return NextResponse.json({ success: true, data: saved });

@@ -14,7 +14,7 @@ export async function GET(req: Request, props: { params: Promise<{ tripId: strin
     const trip = await prisma.trip.findUnique({
       where: { id: tripId, userId: user.id },
       include: {
-        tripStops: { include: { activities: true } },
+        itineraryDays: { include: { activities: true } },
         accommodations: true,
         transportations: true,
         preparationItems: true,

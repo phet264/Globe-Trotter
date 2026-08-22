@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
         skip,
         take: pageSize,
         orderBy: { name: 'asc' },
-        include: { _count: { select: { cities: true } } },
+        include: { _count: { select: { destinations: true } } },
       }),
       prisma.country.count(),
     ]);

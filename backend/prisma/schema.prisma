@@ -4,26 +4,12 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 // ---------------------------------------------------------
-// ENUMS
+// ENUMS (Removed for SQLite compatibility)
 // ---------------------------------------------------------
-enum TripStatus {
-  PLANNED
-  ACTIVE
-  COMPLETED
-  CANCELLED
-}
-
-enum ExpenseCategory {
-  TRANSPORT
-  ACCOMMODATION
-  FOOD
-  ACTIVITY
-  OTHER
-}
 
 // ---------------------------------------------------------
 // 1. USER
@@ -51,13 +37,13 @@ model Country {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cities    City[]
+  destinations Destination[]
 }
 
 // ---------------------------------------------------------
-// 3. CITY
+// 3. DESTINATION
 // ---------------------------------------------------------
-model City {
+model Destination {
   id          String   @id @default(uuid())
   countryId   String
   name        String
@@ -65,12 +51,13 @@ model City {
   latitude    Float
   longitude   Float
   description String?
+  imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   country     Country  @relation(fields: [countryId], references: [id], onDelete: Restrict)
-  activities  Activity[]
-  tripStops   TripStop[]
+  places      Place[]
+  trips       Trip[]
   savedBy     SavedDestination[]
 
   @@unique([countryId, slug])
@@ -79,95 +66,94 @@ model City {
 }
 
 // ---------------------------------------------------------
-// 4. ACTIVITY
+// 4. PLACE
 // ---------------------------------------------------------
-model Activity {
+model Place {
   id            String   @id @default(uuid())
-  cityId        String
+  destinationId String
   name          String
   description   String?
   category      String
-  tags          String?  // Phase 5 (stored as comma separated for SQLite)
+  tags          String?
   estimatedCost Float
-  duration      Int?     // duration in minutes
-  latitude      Float?   // Phase 5
-  longitude     Float?   // Phase 5
-  imageUrl      String?  // Phase 5
-  rating        Float?   // Phase 5
-  popularity    Int?     // Phase 5 (1-100)
-  openingTime   String?  // Phase 5 (e.g. "09:00")
-  closingTime   String?  // Phase 5 (e.g. "18:00")
+  currency      String   @default("USD")
+  duration      Int?     // duration in minutes (averageVisitDuration)
+  latitude      Float?
+  longitude     Float?
+  imageUrl      String?
+  rating        Float?
+  popularity    Int?
+  openingTime   String?
+  closingTime   String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  city          City     @relation(fields: [cityId], references: [id], onDelete: Restrict)
-  itineraryItems ItineraryActivity[]
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Restrict)
+  activities    Activity[]
 
-  @@index([cityId])
+  @@index([destinationId])
 }
 
 // ---------------------------------------------------------
 // 5. TRIP
 // ---------------------------------------------------------
 model Trip {
-  id          String     @id @default(uuid())
-  userId      String
-  title       String
-  destination String     @default("TBD")
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  travelers   Int        @default(1)
-  budget      Float?
-  currency    String?
-  coverImage  String?
-  interests   String?    // Phase 5 (stored as comma separated for SQLite)
-  status      TripStatus @default(PLANNED)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id            String     @id @default(uuid())
+  userId        String
+  destinationId String?
+  title         String
+  description   String?
+  startDate     DateTime
+  endDate       DateTime
+  travelers     Int        @default(1)
+  budget        Float?
+  currency      String?
+  coverImage    String?
+  status        String     @default("PLANNED")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tripStops         TripStop[]
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination   Destination? @relation(fields: [destinationId], references: [id], onDelete: Restrict)
+  
+  itineraryDays     ItineraryDay[]
   expenses          Expense[]
   accommodations    Accommodation[]
   transportations   Transportation[]
   preparationItems  PreparationItem[]
+  preferences       TripPreference[]
   sharedTrip        SharedTrip?
 
   @@index([userId])
+  @@index([destinationId])
 }
 
 // ---------------------------------------------------------
-// 6. TRIP STOP
+// 6. ITINERARY DAY
 // ---------------------------------------------------------
-model TripStop {
+model ItineraryDay {
   id            String   @id @default(uuid())
   tripId        String
-  cityId        String?
-  order         Int
+  dayNumber     Int
   title         String?
   date          DateTime?
-  arrivalDate   DateTime?
-  departureDate DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  city          City?    @relation(fields: [cityId], references: [id], onDelete: Restrict)
-  activities    ItineraryActivity[]
+  activities    Activity[]
 
-  @@unique([tripId, order])
+  @@unique([tripId, dayNumber])
   @@index([tripId])
-  @@index([cityId])
 }
 
 // ---------------------------------------------------------
-// 7. ITINERARY ACTIVITY
+// 7. ACTIVITY
 // ---------------------------------------------------------
-model ItineraryActivity {
+model Activity {
   id            String    @id @default(uuid())
-  tripStopId    String
-  activityId    String?
+  itineraryDayId String
+  placeId       String?
   title         String?
   description   String?
   location      String?
@@ -183,11 +169,11 @@ model ItineraryActivity {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  tripStop      TripStop  @relation(fields: [tripStopId], references: [id], onDelete: Cascade)
-  activity      Activity? @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  itineraryDay  ItineraryDay @relation(fields: [itineraryDayId], references: [id], onDelete: Cascade)
+  place         Place?       @relation(fields: [placeId], references: [id], onDelete: Restrict)
 
-  @@index([tripStopId])
-  @@index([activityId])
+  @@index([itineraryDayId])
+  @@index([placeId])
 }
 
 // ---------------------------------------------------------
@@ -196,7 +182,7 @@ model ItineraryActivity {
 model Expense {
   id          String          @id @default(uuid())
   tripId      String
-  category    ExpenseCategory
+  category    String
   amount      Float
   currency    String
   description String?
@@ -214,17 +200,17 @@ model Expense {
 // 9. SAVED DESTINATION
 // ---------------------------------------------------------
 model SavedDestination {
-  id        String   @id @default(uuid())
-  userId    String
-  cityId    String
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  userId        String
+  destinationId String
+  createdAt     DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, cityId])
+  @@unique([userId, destinationId])
   @@index([userId])
-  @@index([cityId])
+  @@index([destinationId])
 }
 
 // ---------------------------------------------------------
@@ -249,13 +235,13 @@ model Accommodation {
   tripId           String
   name             String
   address          String?
-  checkInDate      DateTime @db.Date
-  checkOutDate     DateTime @db.Date
+  checkInDate      DateTime
+  checkOutDate     DateTime
   checkInTime      String?  // e.g. "14:00"
   checkOutTime     String?  // e.g. "11:00"
   nights           Int
-  pricePerNight    Decimal? @db.Decimal(10, 2)
-  totalCost        Decimal  @db.Decimal(10, 2)
+  pricePerNight    Float?
+  totalCost        Float
   currency         String   @default("USD")
   guests           Int      @default(1)
   bookingReference String?
@@ -281,11 +267,11 @@ model Transportation {
   provider          String?
   departureLocation String
   arrivalLocation   String
-  departureDate     DateTime @db.Date
+  departureDate     DateTime
   departureTime     String?  // e.g. "08:30"
-  arrivalDate       DateTime @db.Date
+  arrivalDate       DateTime
   arrivalTime       String?  // e.g. "10:45"
-  cost              Decimal  @db.Decimal(10, 2)
+  cost              Float
   currency          String   @default("USD")
   bookingReference  String?
   notes             String?
@@ -308,6 +294,22 @@ model PreparationItem {
   category    String   // Documents, Clothing, Electronics, etc.
   name        String
   isCompleted Boolean  @default(false)
+  isSuggested Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+}
+
+// ---------------------------------------------------------
+// 14. TRIP PREFERENCE
+// ---------------------------------------------------------
+model TripPreference {
+  id          String   @id @default(uuid())
+  tripId      String
+  preference  String   // e.g. ADVENTURE, CULTURE, FOOD, RELAXATION
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

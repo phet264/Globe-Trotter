@@ -14,13 +14,13 @@ export async function GET(req: NextRequest) {
     const where = category ? { category } : {};
 
     const [activities, total] = await Promise.all([
-      prisma.activity.findMany({
+      prisma.place.findMany({
         where,
         skip,
         take: pageSize,
-        include: { city: { include: { country: true } } },
+        include: { destination: { include: { country: true } } },
       }),
-      prisma.activity.count({ where }),
+      prisma.place.count({ where }),
     ]);
 
     return NextResponse.json({

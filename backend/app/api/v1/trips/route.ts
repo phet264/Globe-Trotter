@@ -12,7 +12,7 @@ export async function GET() {
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
     });
-    return NextResponse.json(successResponse({ trips }));
+    return NextResponse.json(successResponse({ trips: trips.map(t => ({...t, name: t.title})) }));
   } catch {
     return NextResponse.json(errorResponse('UNAUTHENTICATED', 'Not authenticated', requestId), { status: 401 });
   }
@@ -30,12 +30,12 @@ export async function POST(req: Request) {
     const trip = await prisma.trip.create({
       data: {
         userId: user.id,
-        title: body.title,
-        destination: body.destination,
+        title: body.title || body.name,
+        destinationId: body.destinationId,
         description: body.description,
         startDate,
         endDate,
-        travelers: body.travelers,
+        travelers: body.travelers || 1,
         budget: body.budget,
         currency: body.currency,
         coverImage: body.coverImage,
@@ -49,15 +49,15 @@ export async function POST(req: Request) {
         dayDate.setDate(dayDate.getDate() + index);
         return {
           tripId: trip.id,
-          order: index + 1,
+          dayNumber: index + 1,
           date: dayDate,
           title: `Day ${index + 1}`
         };
       });
-      await prisma.tripStop.createMany({ data: stops });
+      await prisma.itineraryDay.createMany({ data: stops });
     }
 
-    return NextResponse.json(successResponse({ trip }));
+    return NextResponse.json(successResponse({ trip: { ...trip, name: trip.title } }));
   } catch (error) {
     return NextResponse.json(errorResponse('SERVER_ERROR', 'Failed to create trip', requestId), { status: 500 });
   }

@@ -1,7 +1,7 @@
-import { Trip, TripStop, ItineraryActivity, Expense, Accommodation, Transportation, PreparationItem } from '@prisma/client';
+import { Trip, ItineraryDay, Activity, Expense, Accommodation, Transportation, PreparationItem } from '@prisma/client';
 
 type FullTrip = Trip & {
-  tripStops: (TripStop & { activities: ItineraryActivity[] })[];
+  itineraryDays: (ItineraryDay & { activities: Activity[] })[];
   expenses: Expense[];
   accommodations: Accommodation[];
   transportations: Transportation[];
@@ -26,7 +26,7 @@ export function calculateTripCost(trip: FullTrip) {
   });
 
   // Itinerary Activities
-  trip.tripStops.forEach(stop => {
+  trip.itineraryDays.forEach(stop => {
     stop.activities.forEach(act => {
       activities += Number(act.estimatedCost || 0);
     });
@@ -46,7 +46,7 @@ export function calculateTripCost(trip: FullTrip) {
   const totalBudget = Number(trip.budget || 0);
   const remaining = totalBudget - totalProjected;
   
-  const tripDays = trip.tripStops.length || 1;
+  const tripDays = trip.itineraryDays.length || 1;
   const perDay = totalProjected / tripDays;
   const perTraveler = totalProjected / (trip.travelers || 1);
 
@@ -83,7 +83,7 @@ export function detectConflicts(trip: FullTrip) {
   const conflicts: any[] = [];
   
   // 1. Overloaded Day Detection
-  trip.tripStops.forEach(stop => {
+  trip.itineraryDays.forEach(stop => {
     // let's assume average duration is 2 hours if missing.
     let totalMinutes = 0;
     stop.activities.forEach(a => {
@@ -99,19 +99,19 @@ export function detectConflicts(trip: FullTrip) {
       conflicts.push({
         id: `overload-${stop.id}`,
         severity: 'WARNING',
-        message: `Day ${stop.order} has ${Math.round(totalMinutes / 60)} hours of scheduled activities.`
+        message: `Day ${stop.dayNumber} has ${Math.round(totalMinutes / 60)} hours of scheduled activities.`
       });
     } else if (stop.activities.length > 0 && totalMinutes < 120) {
       conflicts.push({
         id: `underload-${stop.id}`,
         severity: 'INFO',
-        message: `Day ${stop.order} has very few activities planned.`
+        message: `Day ${stop.dayNumber} has very few activities planned.`
       });
     }
   });
 
   // 2. Overlap Detection (Activities within same day)
-  trip.tripStops.forEach(stop => {
+  trip.itineraryDays.forEach(stop => {
     const timedActs = stop.activities.filter(a => a.startTime).sort((a, b) => new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime());
     for (let i = 0; i < timedActs.length - 1; i++) {
       const curr = timedActs[i];
@@ -135,7 +135,7 @@ export function detectConflicts(trip: FullTrip) {
     const arrivalDateObj = parseDateTime(trans.arrivalDate, trans.arrivalTime);
     if (arrivalDateObj) {
       const arrTime = arrivalDateObj.getTime();
-      trip.tripStops.forEach(stop => {
+      trip.itineraryDays.forEach(stop => {
         stop.activities.forEach(act => {
           if (act.startTime) {
             const actStart = new Date(act.startTime).getTime();
@@ -179,7 +179,7 @@ export function calculateTripReadiness(trip: FullTrip) {
   const pendingChecks: string[] = [];
 
   // Basics (30%)
-  if (trip.destination && trip.destination !== 'TBD') {
+  if (trip.destinationId && trip.destinationId !== 'TBD') {
     score += 15;
     completedChecks.push('Destination configured');
   } else pendingChecks.push('Destination configured');
@@ -201,7 +201,7 @@ export function calculateTripReadiness(trip: FullTrip) {
   } else pendingChecks.push('Transportation missing');
 
   // Itinerary (30%)
-  const hasActivities = trip.tripStops.some(ts => ts.activities.length > 0);
+  const hasActivities = trip.itineraryDays.some(ts => ts.activities.length > 0);
   if (hasActivities) {
     score += 15;
     completedChecks.push('Itinerary activities planned');
@@ -233,7 +233,7 @@ export function suggestPreparationItems(trip: FullTrip) {
     suggestions.push({ category: 'Documents', name: 'Flight tickets / Boarding pass' });
   }
 
-  const allCategories = trip.tripStops.flatMap(ts => ts.activities.map(a => a.category?.toLowerCase()));
+  const allCategories = trip.itineraryDays.flatMap(ts => ts.activities.map(a => a.category?.toLowerCase()));
   if (allCategories.includes('beach') || allCategories.includes('swimming')) {
     suggestions.push({ category: 'Clothing', name: 'Swimwear' });
     suggestions.push({ category: 'Health/Safety', name: 'Sunscreen' });

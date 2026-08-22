@@ -9,28 +9,28 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const city = await prisma.city.findFirst({
+    const destination = await prisma.destination.findFirst({
       where: { slug },
       include: {
         country: true,
-        activities: {
+        places: {
           take: 20,
         },
       },
     });
 
-    if (!city) {
+    if (!destination) {
       return NextResponse.json(
-        { success: false, error: { code: 'NOT_FOUND', message: 'City not found' } },
+        { success: false, error: { code: 'NOT_FOUND', message: 'Destination not found' } },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: city });
+    return NextResponse.json({ success: true, data: destination });
   } catch (error) {
     console.error('[CITY_GET]', error);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch city' } },
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch destination' } },
       { status: 500 }
     );
   }

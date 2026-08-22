@@ -41,9 +41,27 @@ export async function POST(req: Request) {
       }
     });
     
-    return NextResponse.json(
-      successResponse({ user: newUser, token: 'mock-jwt-token-backend' })
+    const cookieName = process.env.NODE_ENV === 'production' ? '__Secure-authjs.session-token' : 'authjs.session-token';
+    const { encode } = await import('next-auth/jwt');
+    const token = await encode({
+      token: { id: newUser.id, name: newUser.name, email: newUser.email },
+      secret: process.env.AUTH_SECRET || 'fallback-secret',
+      salt: cookieName,
+    });
+    
+    const response = NextResponse.json(
+      successResponse({ user: newUser })
     );
+    
+    response.cookies.set(cookieName, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60,
+    });
+    
+    return response;
     
   } catch (error) {
     const err = error as Error;

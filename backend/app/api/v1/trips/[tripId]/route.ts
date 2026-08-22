@@ -13,8 +13,8 @@ export async function GET(req: Request, props: { params: Promise<{ tripId: strin
     const trip = await prisma.trip.findUnique({
       where: { id: tripId, userId: user.id },
       include: {
-        tripStops: {
-          orderBy: { order: 'asc' },
+        itineraryDays: {
+          orderBy: { dayNumber: 'asc' },
           include: {
             activities: {
               orderBy: { order: 'asc' }
@@ -29,7 +29,7 @@ export async function GET(req: Request, props: { params: Promise<{ tripId: strin
     });
     
     if (!trip) return NextResponse.json(errorResponse('NOT_FOUND', 'Trip not found', requestId), { status: 404 });
-    return NextResponse.json(successResponse({ trip }));
+    return NextResponse.json(successResponse({ trip: { ...trip, name: trip.title, stops: trip.itineraryDays } }));
   } catch {
     return NextResponse.json(errorResponse('SERVER_ERROR', 'Failed to fetch trip', requestId), { status: 500 });
   }

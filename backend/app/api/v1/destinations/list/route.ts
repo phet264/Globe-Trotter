@@ -13,21 +13,21 @@ export async function GET(req: NextRequest) {
 
     const where = countrySlug ? { country: { slug: countrySlug } } : {};
 
-    const [cities, total] = await Promise.all([
-      prisma.city.findMany({
+    const [destinations, total] = await Promise.all([
+      prisma.destination.findMany({
         where,
         skip,
         take: pageSize,
         orderBy: { name: 'asc' },
-        include: { country: true, _count: { select: { activities: true } } },
+        include: { country: true, _count: { select: { places: true } } },
       }),
-      prisma.city.count({ where }),
+      prisma.destination.count({ where }),
     ]);
 
     return NextResponse.json({
       success: true,
       data: {
-        items: cities,
+        items: destinations,
         pagination: {
           page,
           pageSize,
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('[CITIES_GET]', error);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch cities' } },
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch destinations' } },
       { status: 500 }
     );
   }
