@@ -25,7 +25,13 @@ export function MapSyncProvider({ children }: { children: ReactNode }) {
 export function useMapSync() {
   const context = useContext(MapSyncContext);
   if (context === undefined) {
-    throw new Error('useMapSync must be used within a MapSyncProvider');
+    // Graceful fallback for components rendered outside the provider (e.g. error boundaries or isolated portals)
+    return {
+      hoveredCityId: null,
+      setHoveredCityId: () => {},
+      selectedCityId: null,
+      setSelectedCityId: () => {}
+    };
   }
   return context;
 }
