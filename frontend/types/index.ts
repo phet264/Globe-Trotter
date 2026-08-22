@@ -31,6 +31,13 @@ export interface Activity {
   durationMinutes?: number;
   estimatedCost?: number;
   imageUrl?: string;
+  tags?: string[];
+  latitude?: number;
+  longitude?: number;
+  rating?: number;
+  popularity?: number;
+  openingTime?: string;
+  closingTime?: string;
 }
 
 export interface Trip {
@@ -45,6 +52,7 @@ export interface Trip {
   budget?: number;
   currency?: string;
   coverImage?: string;
+  interests?: string[]; // nested data
   status: 'planning' | 'upcoming' | 'ongoing' | 'completed';
   createdAt: string;
   updatedAt: string;

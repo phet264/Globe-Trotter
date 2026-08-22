@@ -21,6 +21,7 @@ export const TripSchema = z.object({
   budget: z.number().nonnegative().optional(),
   currency: z.string().optional(),
   coverImage: z.string().url().optional(),
+  interests: z.array(z.string()).default([]),
   status: z.enum(["planning", "upcoming", "ongoing", "completed"]).default("planning"),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),

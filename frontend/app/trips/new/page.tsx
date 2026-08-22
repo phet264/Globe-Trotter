@@ -22,9 +22,16 @@ const formSchema = z.object({
   travelers: z.number().min(1),
   budget: z.number().optional(),
   currency: z.string(),
+  interests: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+const INTERESTS_OPTIONS = [
+  "Adventure", "Nature", "History", "Culture", "Food", 
+  "Shopping", "Nightlife", "Photography", "Relaxation", 
+  "Architecture", "Family", "Entertainment"
+];
 
 export default function CreateTripPage() {
   const router = useRouter();
@@ -33,7 +40,7 @@ export default function CreateTripPage() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { travelers: 1, currency: "USD" }
+    defaultValues: { travelers: 1, currency: "USD", interests: [] }
   });
 
   const onSubmit = async (data: FormValues) => {
@@ -97,6 +104,18 @@ export default function CreateTripPage() {
           <div className="space-y-2">
             <Label htmlFor="budget">Total Budget</Label>
             <Input id="budget" type="number" min="0" placeholder="0" {...register("budget", { valueAsNumber: true })} />
+          </div>
+
+          <div className="space-y-2 col-span-2">
+            <Label>Travel Interests</Label>
+            <div className="flex flex-wrap gap-3 mt-2">
+              {INTERESTS_OPTIONS.map(interest => (
+                <label key={interest} className="flex items-center space-x-2 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border hover:bg-slate-100 transition-colors">
+                  <input type="checkbox" value={interest} {...register("interests")} className="rounded text-blue-600 focus:ring-blue-500" />
+                  <span className="text-sm font-medium text-slate-700">{interest}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2 col-span-2">
