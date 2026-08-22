@@ -25,7 +25,7 @@ export function UpcomingTripCard({ trip }: { trip: Trip }) {
     >
       <div 
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-        style={{ backgroundImage: `url('${trip.coverImage || getMockImage(stops[0]?.city || 'world', 1200, 800)}')` }}
+        style={{ backgroundImage: `url('${trip.coverImage || getMockImage(stops[0]?.city || trip.name.replace(/trip|journey|vacation/gi, '').trim() || 'world', 1200, 800)}')` }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
       
@@ -93,7 +93,7 @@ export function TripCard({ trip }: { trip: Trip }) {
       >
         <div 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-          style={{ backgroundImage: `url('${trip.coverImage || getMockImage(stops[0]?.city || 'world', 800, 600)}')` }}
+          style={{ backgroundImage: `url('${trip.coverImage || getMockImage(stops[0]?.city || trip.name.replace(/trip|journey|vacation/gi, '').trim() || 'world', 800, 600)}')` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
         

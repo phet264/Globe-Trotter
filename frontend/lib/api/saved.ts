@@ -5,9 +5,9 @@ export const savedApi = {
   getSavedDestinations: () => 
     api.get<SavedDestination[]>('/v1/saved-destinations'),
     
-  saveDestination: (cityId: string) =>
-    api.post<SavedDestination>('/v1/saved-destinations', { cityId }),
+  saveDestination: (destinationId: string) =>
+    api.post<SavedDestination>('/v1/saved-destinations', { destinationId }),
     
-  unsaveDestination: (cityId: string) =>
-    api.delete<{ success: boolean }>(`/v1/saved-destinations/${cityId}`),
+  unsaveDestination: (destinationId: string) =>
+    api.delete<{ success: boolean }>(`/v1/saved-destinations/${destinationId}`),
 };

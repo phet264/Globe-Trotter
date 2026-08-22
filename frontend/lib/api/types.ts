@@ -85,8 +85,8 @@ export interface Activity {
 export interface SavedDestination {
   id: string;
   userId: string;
-  cityId: string;
-  city: City;
+  destinationId: string;
+  destination: City;
   createdAt: string;
 }
 

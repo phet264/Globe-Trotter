@@ -3,18 +3,15 @@ import { api } from './client';
 
 export const itineraryApi = {
   getActivities: async (tripId: string): Promise<ItineraryActivity[]> => {
-    const res = await api.get<{ data: ItineraryActivity[] }>(`/v1/trips/${tripId}/activities`);
-    return res.data;
+    return await api.get<ItineraryActivity[]>(`/v1/trips/${tripId}/activities`);
   },
 
   addActivity: async (data: Partial<ItineraryActivity>): Promise<ItineraryActivity> => {
-    const res = await api.post<{ data: ItineraryActivity }>(`/v1/trips/${data.tripId}/activities`, data);
-    return res.data;
+    return await api.post<ItineraryActivity>(`/v1/trips/${data.tripId}/activities`, data);
   },
 
   updateActivity: async (id: string, data: Partial<ItineraryActivity>): Promise<ItineraryActivity> => {
-    const res = await api.patch<{ data: ItineraryActivity }>(`/v1/trips/activities/${id}`, data);
-    return res.data;
+    return await api.patch<ItineraryActivity>(`/v1/trips/activities/${id}`, data);
   },
 
   deleteActivity: async (id: string): Promise<void> => {
@@ -22,7 +19,6 @@ export const itineraryApi = {
   },
 
   reorderActivities: async ({ tripId, activityIds }: { tripId: string, activityIds: string[] }): Promise<ItineraryActivity[]> => {
-    const res = await api.patch<{ data: ItineraryActivity[] }>(`/v1/trips/${tripId}/activities/reorder`, { activityIds });
-    return res.data;
+    return await api.patch<ItineraryActivity[]>(`/v1/trips/${tripId}/activities/reorder`, { activityIds });
   }
 };

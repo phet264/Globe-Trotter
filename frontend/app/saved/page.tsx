@@ -28,7 +28,7 @@ export default function SavedPage() {
         ) : savedDestinations && savedDestinations.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {savedDestinations.map(saved => (
-              <CityCard key={saved.id} city={saved.city} isSaved={true} />
+              <CityCard key={saved.id} city={saved.destination} isSaved={true} />
             ))}
           </div>
         ) : (

@@ -21,7 +21,7 @@ export async function recalculateTravelerProfile(userId: string) {
     where: { userId },
     include: {
       preferences: true,
-      itineraryDays: { include: { activities: true } },
+      tripStops: { include: { activities: true } },
       expenses: true,
       accommodations: true
     }
@@ -63,7 +63,7 @@ export async function recalculateTravelerProfile(userId: string) {
 
   // Infer from itinerary categories directly
   trips.forEach(t => {
-    t.itineraryDays.forEach(day => {
+    t.tripStops.forEach(day => {
       day.activities.forEach(a => {
         if (a.category) {
           const cat = CATEGORIES.find(c => a.category?.toLowerCase().includes(c.toLowerCase()));
@@ -80,8 +80,8 @@ export async function recalculateTravelerProfile(userId: string) {
   let totalDays = 0;
   let totalActs = 0;
   trips.forEach(t => {
-    totalDays += t.itineraryDays.length || 1;
-    t.itineraryDays.forEach(d => totalActs += d.activities.length);
+    totalDays += t.tripStops.length || 1;
+    t.tripStops.forEach(d => totalActs += d.activities.length);
   });
   let actsPerDay = totalDays > 0 ? totalActs / totalDays : 0;
   let paceCategory = 'Unknown';

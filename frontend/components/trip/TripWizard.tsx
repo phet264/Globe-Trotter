@@ -9,7 +9,7 @@ import Globe from '@/components/globe/Globe';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, CheckCircle2, ChevronRight, ChevronLeft, Map, Calendar, Heart, IndianRupee } from 'lucide-react';
+import { Search, MapPin, CheckCircle2, ChevronRight, ChevronLeft, Map, Calendar, Heart, IndianRupee, Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -114,8 +114,8 @@ export function TripWizard() {
 
   const handleNext = async () => {
     let fieldsToValidate: (keyof TripFormData)[] = [];
-    if (step === 1) fieldsToValidate = ['stops'];
-    if (step === 2) fieldsToValidate = ['name', 'startDate', 'endDate'];
+    if (step === 1) fieldsToValidate = ['stops', 'startDate', 'endDate'];
+    if (step === 2) fieldsToValidate = ['name'];
     if (step === 3) fieldsToValidate = ['interests'];
     if (step === 4) fieldsToValidate = ['budget'];
 
@@ -264,21 +264,8 @@ export function TripWizard() {
                   </div>
                   {errors.stops && <p className="text-destructive text-sm mt-2">{errors.stops.message}</p>}
                 </div>
-              </motion.div>
-            )}
 
-            {step === 2 && (
-              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                <h3 className="text-xl font-bold text-slate-900 mb-4">When are you traveling?</h3>
-                
-                <Controller name="name" control={control} render={({ field }) => (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Trip Name</label>
-                    <Input {...field} placeholder="e.g. European Summer 2026" className={`h-12 bg-slate-50 ${errors.name ? 'border-destructive' : 'border-transparent'} text-lg`} />
-                    {errors.name && <p className="text-destructive text-sm mt-1">{errors.name.message}</p>}
-                  </div>
-                )} />
-
+                <h3 className="text-xl font-bold text-slate-900 mb-4 pt-6 border-t border-slate-100">When are you traveling?</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <Controller name="startDate" control={control} render={({ field }) => (
                     <div>
@@ -295,6 +282,20 @@ export function TripWizard() {
                     </div>
                   )} />
                 </div>
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                <h3 className="text-xl font-bold text-slate-900 mb-4">Give your trip a name</h3>
+                
+                <Controller name="name" control={control} render={({ field }) => (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Trip Name</label>
+                    <Input {...field} placeholder="e.g. European Summer 2026" className={`h-12 bg-slate-50 ${errors.name ? 'border-destructive' : 'border-transparent'} text-lg`} />
+                    {errors.name && <p className="text-destructive text-sm mt-1">{errors.name.message}</p>}
+                  </div>
+                )} />
               </motion.div>
             )}
 

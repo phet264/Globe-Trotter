@@ -7,7 +7,7 @@ export async function buildTripContext(tripId: string, userId: string) {
     where: { id: tripId, userId },
     include: {
       destination: true,
-      itineraryDays: {
+      tripStops: {
         orderBy: { dayNumber: 'asc' },
         include: {
           activities: {
@@ -52,7 +52,7 @@ export async function buildTripContext(tripId: string, userId: string) {
       conflicts,
       readiness
     },
-    itinerary: trip.itineraryDays.map(day => ({
+    itinerary: trip.tripStops.map(day => ({
       id: day.id,
       dayNumber: day.dayNumber,
       date: day.date,

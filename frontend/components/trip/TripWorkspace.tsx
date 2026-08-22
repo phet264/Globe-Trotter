@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tripsApi } from '@/lib/api/trips';
 import { itineraryApi } from '@/lib/api/itinerary';
 import { Trip, ItineraryActivity } from '@/lib/api/types';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInDays, addDays } from 'date-fns';
 import { Plus, Map, Share2, Copy, FileText, Download, UserPlus, FileEdit, Settings, Plane, Bus, Search, MoreHorizontal, MoveUp, MoveDown, Calendar, MapPin, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -95,6 +95,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
   const [selectedStopId, setSelectedStopId] = useState<string>('');
   const [isAddingStop, setIsAddingStop] = useState(false);
   const [stopSearchQuery, setStopSearchQuery] = useState('');
+  const [activeDayIndex, setActiveDayIndex] = useState(0);
 
   const addActivityMutation = useMutation({
     mutationFn: itineraryApi.addActivity,
@@ -179,7 +180,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
       stopId: selectedStopId || trip?.stops[0]?.id || 'unknown',
       title: newActivityTitle,
       time: newActivityTime,
-      day: 1
+      day: activeDayIndex + 1
     });
   };
 
@@ -196,6 +197,17 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
   }
 
   if (!trip) return <div className="p-10 text-center">Trip not found</div>;
+
+  const tripStartDate = trip.startDate ? parseISO(trip.startDate) : new Date();
+  const tripEndDate = trip.endDate ? parseISO(trip.endDate) : addDays(tripStartDate, 2);
+  const numDays = Math.max(1, differenceInDays(tripEndDate, tripStartDate) + 1);
+
+  const tripDays = Array.from({ length: numDays }).map((_, i) => ({
+    dayNumber: i + 1,
+    date: addDays(tripStartDate, i)
+  }));
+
+  const activeActivities = activities.filter(a => a.day === activeDayIndex + 1);
 
   return (
     <div className="w-full h-full pb-24">
@@ -326,9 +338,30 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
 
         {/* Right Column: Itinerary */}
         <div className="lg:col-span-2 space-y-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-2xl font-display font-bold text-slate-900">Itinerary</h3>
-            <div className="bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full text-sm font-medium">Day 1</div>
+            <div className="bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full text-sm font-medium">Day {activeDayIndex + 1}</div>
+          </div>
+
+          {/* Calendar Day Selector */}
+          <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
+            {tripDays.map((day, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveDayIndex(i)}
+                className={`flex flex-col items-center justify-center min-w-[70px] py-2 px-3 rounded-2xl transition-all shrink-0 border ${
+                  activeDayIndex === i 
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-md' 
+                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                }`}
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">Day {day.dayNumber}</span>
+                <span className={`text-lg font-bold leading-none mb-0.5 ${activeDayIndex === i ? 'text-white' : 'text-slate-900'}`}>
+                  {format(day.date, 'd')}
+                </span>
+                <span className="text-xs">{format(day.date, 'MMM')}</span>
+              </button>
+            ))}
           </div>
 
           <div className="space-y-4">
@@ -336,9 +369,9 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
               <div className="animate-pulse space-y-4">
                 {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-100 rounded-2xl" />)}
               </div>
-            ) : activities.length === 0 ? (
+            ) : activeActivities.length === 0 ? (
               <div className="text-center py-16 bg-slate-50 rounded-3xl border border-slate-100">
-                <p className="text-slate-500 mb-4">Your itinerary is waiting to be planned.</p>
+                <p className="text-slate-500 mb-4">Your itinerary for Day {activeDayIndex + 1} is waiting to be planned.</p>
                 <Button onClick={() => setIsAddingActivity(true)} className="rounded-full bg-primary hover:bg-primary/90">
                   Add your first activity
                 </Button>
@@ -346,7 +379,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
             ) : (
               (() => {
                 const allEvents: any[] = [];
-                activities.forEach(a => {
+                activeActivities.forEach(a => {
                   allEvents.push({ ...a, eventType: 'ACTIVITY' });
                 });
               
@@ -364,7 +397,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
 
                 return (
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                    <SortableContext items={activities.map(a => a.id)} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={activeActivities.map(a => a.id)} strategy={verticalListSortingStrategy}>
                       <div className="space-y-4">
                         {allEvents.map((event) => {
                           if (event.eventType === 'ACTIVITY') {
@@ -399,7 +432,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
                 onClose={() => setIsAddingActivity(false)} 
               />
             ) : (
-              activities.length > 0 && (
+              activeActivities.length > 0 && (
                 <button 
                   onClick={() => setIsAddingActivity(true)}
                   className="w-full flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-200 hover:border-slate-300 rounded-2xl transition-colors text-slate-500 hover:text-slate-700 font-medium gap-2 group"

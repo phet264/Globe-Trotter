@@ -1,4 +1,4 @@
-import { Place, Trip, ItineraryDay, Activity, TripPreference } from '@prisma/client';
+import { Place, Trip, TripStop, Activity, TripPreference } from '@prisma/client';
 import { prisma } from '../db/prisma';
 
 // Haversine distance formula
@@ -106,7 +106,7 @@ export async function getRecommendations(tripId: string): Promise<ScoredPlace[]>
     where: { id: tripId },
     include: { 
       preferences: true,
-      itineraryDays: { include: { activities: true } },
+      tripStops: { include: { activities: true } },
       destination: true,
       user: { include: { travelPreferences: true } }
     }
@@ -114,11 +114,11 @@ export async function getRecommendations(tripId: string): Promise<ScoredPlace[]>
   if (!trip) throw new Error('Trip not found');
 
   // get all planned activities
-  const plannedPlaceIds = trip.itineraryDays.flatMap(day => day.activities.map(a => a.placeId)).filter(Boolean);
+  const plannedPlaceIds = trip.tripStops.flatMap(day => day.activities.map(a => a.placeId)).filter(Boolean);
   
   // get total planned cost
   let plannedCost = 0;
-  trip.itineraryDays.forEach(day => {
+  trip.tripStops.forEach(day => {
     day.activities.forEach(a => {
       if (a.estimatedCost) plannedCost += Number(a.estimatedCost);
     });
@@ -148,7 +148,7 @@ export async function generateSuggestedItinerary(tripId: string) {
     where: { id: tripId },
     include: { 
       preferences: true,
-      itineraryDays: { include: { activities: true }, orderBy: { dayNumber: 'asc' } },
+      tripStops: { include: { activities: true }, orderBy: { dayNumber: 'asc' } },
       user: { include: { travelPreferences: true } }
     }
   });
@@ -157,12 +157,12 @@ export async function generateSuggestedItinerary(tripId: string) {
   let recommendations = await getRecommendations(tripId);
   
   let plannedCost = 0;
-  trip.itineraryDays.forEach(day => day.activities.forEach(a => plannedCost += Number(a.estimatedCost || 0)));
+  trip.tripStops.forEach(day => day.activities.forEach(a => plannedCost += Number(a.estimatedCost || 0)));
   let budget = Number(trip.budget || 0);
 
   const newActivities: Activity[] = [];
   
-  for (const day of trip.itineraryDays) {
+  for (const day of trip.tripStops) {
     let currentDayMinutes = 0;
     let lastLat: number | undefined;
     let lastLng: number | undefined;
@@ -197,14 +197,14 @@ export async function generateSuggestedItinerary(tripId: string) {
 
       const newAct = await prisma.activity.create({
         data: {
-          itineraryDayId: day.id,
+          tripStopId: day.id,
           placeId: top.id,
           title: top.name,
           description: top.description,
           category: top.category,
           estimatedCost: top.estimatedCost,
           imageUrl: top.imageUrl,
-          order: day.activities.length + newActivities.filter(na => na.itineraryDayId === day.id).length + 1,
+          order: day.activities.length + newActivities.filter(na => na.tripStopId === day.id).length + 1,
           notes: `Suggested: ${top.reason}`
         }
       });
