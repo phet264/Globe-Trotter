@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,7 +16,12 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "GlobeTrotter | Premium Travel Planning",
-  description: "Plan, visualize, and share your multi-city journeys with GlobeTrotter.",
+  description: "Plan, visualize, and share your multi-city journeys with GlobeTrotter. Experience your trip in 3D before you travel.",
+  openGraph: {
+    title: "GlobeTrotter | Premium Travel Planning",
+    description: "Design your perfect journey with our premium travel planning tools.",
+    type: "website",
+  }
 };
 
 export default function RootLayout({
@@ -49,36 +55,7 @@ export default function RootLayout({
 
           <main className="flex-1 flex flex-col">{children}</main>
 
-          {/* Footer Placeholder */}
-          <footer className="border-t border-border/40 py-12">
-            <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div>
-                <span className="font-display text-xl font-bold">GlobeTrotter</span>
-                <p className="mt-4 text-sm text-muted-foreground">Premium travel planning for the modern explorer.</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-4">Product</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>Features</li>
-                  <li>Pricing</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-4">Company</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>About</li>
-                  <li>Contact</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-4">Legal</h4>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>Privacy</li>
-                  <li>Terms</li>
-                </ul>
-              </div>
-            </div>
-          </footer>
+          <Footer />
         </TooltipProvider>
       </body>
     </html>
