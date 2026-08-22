@@ -100,3 +100,30 @@ export interface PaginatedResponse<T> {
   items: T[];
   pagination: PaginationMeta;
 }
+
+export type ExpenseCategory = 'Transport' | 'Accommodation' | 'Activities' | 'Meals' | 'Other';
+
+export interface Expense {
+  id: string;
+  tripId: string;
+  amount: number;
+  category: ExpenseCategory;
+  description: string;
+  date: string;
+}
+
+export interface CategorySummary {
+  category: ExpenseCategory;
+  amount: number;
+  percentage: number;
+}
+
+export interface BudgetSummary {
+  totalBudget: number;
+  spent: number;
+  remaining: number;
+  dailyAverage: number;
+  status: 'Under budget' | 'On track' | 'Near limit' | 'Over budget';
+  categoryBreakdown: CategorySummary[];
+  dailySpending: { date: string; amount: number }[];
+}

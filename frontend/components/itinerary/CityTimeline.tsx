@@ -6,6 +6,7 @@ import { itineraryApi } from '@/lib/api/itinerary';
 import { ItineraryActivity } from '@/lib/api/types';
 import ActivityEditor from './ActivityEditor';
 import { useTravelTransition } from '@/components/globe/TravelTransitionEngine';
+import { useMapSync } from '@/components/globe/MapSyncContext';
 import { Button } from '@/components/ui/button';
 
 interface CityTimelineProps {
@@ -17,6 +18,7 @@ export default function CityTimeline({ tripId }: CityTimelineProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [editingActivity, setEditingActivity] = useState<ItineraryActivity | null>(null);
   const { startTransition } = useTravelTransition();
+  const { hoveredCityId, setHoveredCityId, selectedCityId, setSelectedCityId } = useMapSync();
 
   useEffect(() => {
     loadActivities();
@@ -87,19 +89,25 @@ export default function CityTimeline({ tripId }: CityTimelineProps) {
               {activities.map((activity, index) => (
                 <Draggable key={activity.id} draggableId={activity.id} index={index}>
                   {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group"
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-slate-500">{activity.time}</span>
-                        <span className="text-lg font-medium text-slate-900">{activity.title}</span>
-                        {activity.location && (
-                          <span className="text-sm text-slate-500">{activity.location}</span>
-                        )}
-                      </div>
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        onMouseEnter={() => setHoveredCityId(activity.stopId)}
+                        onMouseLeave={() => setHoveredCityId(null)}
+                        onClick={() => setSelectedCityId(activity.stopId)}
+                        className={`bg-white p-4 rounded-xl shadow-sm border flex items-center justify-between group transition-colors cursor-pointer ${
+                          selectedCityId === activity.stopId ? 'border-blue-500 ring-1 ring-blue-500' :
+                          hoveredCityId === activity.stopId ? 'border-slate-300 bg-slate-50' : 'border-slate-100'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-slate-500">{activity.time}</span>
+                          <span className="text-lg font-medium text-slate-900">{activity.title}</span>
+                          {activity.location && (
+                            <span className="text-sm text-slate-500">{activity.location}</span>
+                          )}
+                        </div>
                       <Button 
                         variant="ghost" 
                         size="sm" 
