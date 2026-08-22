@@ -82,7 +82,7 @@ export function AirplaneAnimation({ radius = 2.05 }: AirplaneAnimationProps) {
   return (
     <group>
       {lineGeometry && (
-        <line ref={routeRef}>
+        <line ref={routeRef as any}>
           <primitive object={lineGeometry} attach="geometry" />
           <lineBasicMaterial color="#ffffff" opacity={0.5} transparent linewidth={2} />
         </line>

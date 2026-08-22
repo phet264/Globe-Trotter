@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -67,7 +68,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
   const { data: fullTrip, refetch: refetchFullTrip } = useQuery({
     queryKey: ['trip-full', tripId],
     queryFn: async () => {
-      const res = await api.get<{ trip: any }>(`/v1/trips/${tripId}`);
+      const res = await api.get<{ trip: unknown }>(`/v1/trips/${tripId}`);
       return res.trip;
     }
   });

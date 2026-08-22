@@ -6,11 +6,20 @@ import { useTravelTransition, LocationInfo } from '@/components/globe/TravelTran
 import { itineraryApi } from '@/lib/api/itinerary';
 import { ItineraryActivity } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
-import { MOCK_CITIES } from '../../../../backend/lib/mockData';
+
+// Mock destinations with hierarchy for the animation
+const MOCK_CITIES = [
+  { id: '1', name: 'Paris', country: { name: 'France' }, latitude: 48.8566, longitude: 2.3522 },
+  { id: '2', name: 'Tokyo', country: { name: 'Japan' }, latitude: 35.6762, longitude: 139.6503 },
+  { id: '3', name: 'Dubai', country: { name: 'UAE' }, latitude: 25.2048, longitude: 55.2708 },
+  { id: '4', name: 'New York', country: { name: 'USA' }, latitude: 40.7128, longitude: -74.0060 },
+  { id: '5', name: 'Amsterdam', country: { name: 'Netherlands' }, latitude: 52.3676, longitude: 4.9041 },
+];
 
 // Map activity location data to LocationInfo
 function mapActivityToLocation(act: ItineraryActivity): LocationInfo {
-  const city = MOCK_CITIES.find(c => c.id === act.cityId);
+  // In a real app, we'd lookup the actual stop details. For mock, we map stopId to a mock city.
+  const city = MOCK_CITIES.find(c => c.id === act.stopId) || MOCK_CITIES[0];
   return {
     id: act.id,
     lat: city?.latitude || 0,
@@ -52,7 +61,7 @@ export function JourneySequenceManager({ tripId }: { tripId: string }) {
         const destLoc = mapActivityToLocation(destAct);
 
         const sameCountry = originLoc.country === destLoc.country;
-        const isNearby = originAct.cityId === destAct.cityId; // same city = walking/nearby
+        const isNearby = originAct.stopId === destAct.stopId; // same city = walking/nearby
 
         // A small delay before next transition starts feels more natural
         const timer = setTimeout(() => {
@@ -63,6 +72,7 @@ export function JourneySequenceManager({ tripId }: { tripId: string }) {
         return () => clearTimeout(timer);
       } else {
         // End of Journey
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsJourneyActive(false);
       }
     }
@@ -76,7 +86,7 @@ export function JourneySequenceManager({ tripId }: { tripId: string }) {
       const originLoc = mapActivityToLocation(activities[0]);
       const destLoc = mapActivityToLocation(activities[1]);
       const sameCountry = originLoc.country === destLoc.country;
-      const isNearby = activities[0].cityId === activities[1].cityId;
+      const isNearby = activities[0].stopId === activities[1].stopId;
       
       startTransition(originLoc, destLoc, sameCountry, isNearby);
       setCurrentIndex(1);
@@ -101,7 +111,7 @@ export function JourneySequenceManager({ tripId }: { tripId: string }) {
         {isJourneyActive ? (
           <>
             <div className="flex justify-between text-xs text-white/70 uppercase tracking-widest font-semibold">
-              <span>{currentAct?.title} ({currentAct?.cityId ? MOCK_CITIES.find(c => c.id === currentAct.cityId)?.name : ''})</span>
+              <span>{currentAct?.title} ({currentAct?.stopId ? MOCK_CITIES.find(c => c.id === currentAct.stopId)?.name : ''})</span>
               {nextAct && <span>Next: {nextAct?.title}</span>}
             </div>
             

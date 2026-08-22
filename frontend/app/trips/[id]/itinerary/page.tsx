@@ -5,8 +5,8 @@ import Globe from '@/components/globe/Globe';
 import { JourneyControls } from '@/components/journey/JourneyControls';
 import { ShareTripAction } from '@/components/trip/ShareTripAction';
 
-export default async function ItineraryPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function ItineraryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   
   if (!id) {
     notFound();

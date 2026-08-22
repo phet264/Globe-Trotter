@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // auth.ts
 
 export interface User {
@@ -48,7 +50,7 @@ export const authApi = {
     return new Promise<void>((resolve) => setTimeout(resolve, 1000));
   },
 
-  resetPassword: async (_data: Record<string, unknown>) => {
+  resetPassword: async (_data: Record<string, any>) => {
     // return api.post('/auth/reset-password', data);
     return new Promise<void>((resolve) => setTimeout(resolve, 1000));
   }

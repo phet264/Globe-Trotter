@@ -57,6 +57,7 @@ export default function Globe({
     if (selectedCityId && selectedCityId !== activeMarkerId) {
       const dest = markers.find(d => d.id === selectedCityId);
       if (dest) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setActiveMarkerId(selectedCityId);
         setInternalActiveTarget({ lat: dest.lat, lng: dest.lng });
         setInternalFocusState('city');

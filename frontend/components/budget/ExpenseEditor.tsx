@@ -39,8 +39,10 @@ export default function ExpenseEditor({ tripId, expense, onClose, onSave }: Expe
     setFormData((prev) => ({ ...prev, [name]: name === 'amount' ? Number(value) : value }));
   };
 
-  const handleCategoryChange = (value: string) => {
-    setFormData(prev => ({ ...prev, category: value as ExpenseCategory }));
+  const handleCategoryChange = (value: string | null) => {
+    if (value) {
+      setFormData(prev => ({ ...prev, category: value as ExpenseCategory }));
+    }
   };
 
   const handleSave = async () => {
@@ -57,10 +59,10 @@ export default function ExpenseEditor({ tripId, expense, onClose, onSave }: Expe
       }
       onSave();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
-        error.errors.forEach(e => {
+        error.errors.forEach((e: any) => {
           if (e.path[0]) newErrors[e.path[0].toString()] = e.message;
         });
         setErrors(newErrors);

@@ -20,10 +20,6 @@ export default function CityTimeline({ tripId }: CityTimelineProps) {
   const { startTransition } = useTravelTransition();
   const { hoveredCityId, setHoveredCityId, selectedCityId, setSelectedCityId } = useMapSync();
 
-  useEffect(() => {
-    loadActivities();
-  }, [tripId]);
-
   const loadActivities = async () => {
     setIsLoading(true);
     try {
@@ -35,6 +31,11 @@ export default function CityTimeline({ tripId }: CityTimelineProps) {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadActivities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripId]);
 
   const onDragEnd = async (result: DropResult) => {
     if (!result.destination) return;

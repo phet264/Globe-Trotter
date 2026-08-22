@@ -4,8 +4,8 @@ import { budgetApi } from '@/lib/api/budget';
 import BudgetCharts from '@/components/budget/BudgetCharts';
 import ExpenseList from '@/components/budget/ExpenseList';
 
-export default async function BudgetPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function BudgetPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   
   if (!id) {
     notFound();

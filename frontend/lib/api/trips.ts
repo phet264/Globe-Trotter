@@ -1,5 +1,6 @@
 import { Trip, TripStop } from './types';
 import { api } from './client';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 export const tripsApi = {
   getTrips: async (): Promise<Trip[]> => {

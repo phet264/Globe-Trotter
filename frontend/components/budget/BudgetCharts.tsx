@@ -115,7 +115,7 @@ export default function BudgetCharts({ tripId }: { tripId: string }) {
                     <Cell key={`cell-${index}`} fill={COLORS[entry.category] || COLORS.Other} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => `$${value}`} />
+                <Tooltip formatter={(value: any) => `$${value}`} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -131,7 +131,7 @@ export default function BudgetCharts({ tripId }: { tripId: string }) {
               <BarChart data={summary.dailySpending}>
                 <XAxis dataKey="date" tick={{fontSize: 12}} tickFormatter={(val) => new Date(val).toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} />
                 <YAxis tick={{fontSize: 12}} />
-                <Tooltip formatter={(value: number) => `$${value}`} />
+                <Tooltip formatter={(value: any) => `$${value}`} />
                 <Bar dataKey="amount" fill="#3B82F6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

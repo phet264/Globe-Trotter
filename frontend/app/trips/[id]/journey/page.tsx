@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation';
 import Globe from '@/components/globe/Globe';
 import { JourneySequenceManager } from '@/components/journey/JourneySequenceManager';
 
-export default async function JourneyPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function JourneyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   
   if (!id) {
     notFound();

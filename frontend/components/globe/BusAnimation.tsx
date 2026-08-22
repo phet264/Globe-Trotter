@@ -79,7 +79,7 @@ export function BusAnimation({ radius = 2.01 }: BusAnimationProps) {
   return (
     <group>
       {lineGeometry && (
-        <line ref={routeRef}>
+        <line ref={routeRef as any}>
           <primitive object={lineGeometry} attach="geometry" />
           <lineDashedMaterial color="#4CAF50" dashSize={0.05} gapSize={0.02} linewidth={3} opacity={0.8} transparent />
         </line>

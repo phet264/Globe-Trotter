@@ -5,8 +5,8 @@ import { CopyTripButton } from '@/components/trip/CopyTripButton';
 
 // For simplicity, we are mocking the shared trip data fetching.
 // In a real app, this would be a dedicated public endpoint that filters private info.
-export default async function SharedTripPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default async function SharedTripPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   
   if (!slug) {
     notFound();
