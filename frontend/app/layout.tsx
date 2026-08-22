@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { TravelTransitionProvider } from "@/components/globe/TravelTransitionEngine";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,11 +40,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <QueryProvider>
           <AuthProvider>
-            <TooltipProvider>
-              <Header />
-              <main className="flex-1 flex flex-col">{children}</main>
-              <Footer />
-            </TooltipProvider>
+            <TravelTransitionProvider>
+              <TooltipProvider>
+                <Header />
+                <main className="flex-1 flex flex-col">{children}</main>
+                <Footer />
+              </TooltipProvider>
+            </TravelTransitionProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

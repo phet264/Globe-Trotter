@@ -10,6 +10,8 @@ import { Countries } from './Countries';
 import { CameraController, CameraFocusState } from './CameraController';
 import { GlobeMarker, MarkerData } from './GlobeMarker';
 import { TravelRoutes } from './TravelRoutes';
+import { AirplaneAnimation } from './AirplaneAnimation';
+import { BusAnimation } from './BusAnimation';
 
 // Mock destinations with hierarchy
 const DEFAULT_DESTINATIONS: MarkerData[] = [
@@ -106,6 +108,14 @@ export default function Globe({
                 onClick={handleMarkerClick}
               />
             ))}
+            
+            {/* Cinematic Transitions */}
+            {!reducedMotion && (
+              <>
+                <AirplaneAnimation />
+                <BusAnimation />
+              </>
+            )}
           </group>
         </React.Suspense>
         
