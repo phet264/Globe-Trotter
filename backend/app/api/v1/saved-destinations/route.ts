@@ -1,16 +1,14 @@
+import { requireAuthenticatedUser } from '@/lib/auth/requireAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// For Phase 5 we assume user is authenticated and get their ID (mocked for simplicity or from session)
-// Since this is a demo, we will extract a mock userId or hardcode one if session isn't available.
-const MOCK_USER_ID = 'test-user-id'; // Ideally extract from session
-
 export async function GET(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
     const saved = await prisma.savedDestination.findMany({
-      where: { userId: MOCK_USER_ID }, // TODO: replace with real user auth
+      where: { userId: user.id },
       include: { destination: { include: { country: true } } },
       orderBy: { createdAt: 'desc' }
     });
@@ -27,6 +25,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await requireAuthenticatedUser();
     const body = await req.json();
     const { destinationId } = body;
 
@@ -37,29 +36,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure the user exists (in a real app, from session)
-    // We'll upsert a test user to ensure foreign key constraint passes
-    await prisma.user.upsert({
-      where: { id: MOCK_USER_ID },
-      update: {},
-      create: {
-        id: MOCK_USER_ID,
-        name: 'Test User',
-        email: 'test@example.com',
-        passwordHash: 'hash',
-      }
-    });
-
     const saved = await prisma.savedDestination.upsert({
       where: {
         userId_destinationId: {
-          userId: MOCK_USER_ID,
+          userId: user.id,
           destinationId,
         }
       },
       update: {},
       create: {
-        userId: MOCK_USER_ID,
+        userId: user.id,
         destinationId,
       },
       include: { destination: { include: { country: true } } }
