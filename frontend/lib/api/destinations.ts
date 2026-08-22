@@ -27,11 +27,12 @@ export const destinationsApi = {
     api.get<City>(`/v1/destinations/cities/${slug}`),
 
   // Activities
-  getActivities: (params?: { page?: number, pageSize?: number, category?: string }) => {
+  getActivities: (params?: { page?: number, pageSize?: number, category?: string, cityId?: string }) => {
     const searchParams: Record<string, string> = {};
     if (params?.page) searchParams.page = params.page.toString();
     if (params?.pageSize) searchParams.pageSize = params.pageSize.toString();
     if (params?.category) searchParams.category = params.category;
+    if (params?.cityId) searchParams.cityId = params.cityId;
     
     return api.get<PaginatedResponse<Activity>>('/v1/destinations/activities', { params: searchParams });
   }

@@ -7,6 +7,7 @@ import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { Trip } from '@/lib/api/types';
 import { MapPin, Calendar, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getMockImage } from '@/lib/utils/images';
 
 export function UpcomingTripCard({ trip }: { trip: Trip }) {
   const stops = trip.stops || [];
@@ -24,7 +25,7 @@ export function UpcomingTripCard({ trip }: { trip: Trip }) {
     >
       <div 
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-        style={{ backgroundImage: `url('${trip.coverImage || '/placeholder.jpg'}')` }}
+        style={{ backgroundImage: `url('${trip.coverImage || getMockImage(stops[0]?.city || 'world', 1200, 800)}')` }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
       
@@ -92,7 +93,7 @@ export function TripCard({ trip }: { trip: Trip }) {
       >
         <div 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-          style={{ backgroundImage: `url('${trip.coverImage || '/placeholder.jpg'}')` }}
+          style={{ backgroundImage: `url('${trip.coverImage || getMockImage(stops[0]?.city || 'world', 800, 600)}')` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
         

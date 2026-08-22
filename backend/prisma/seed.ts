@@ -37,6 +37,36 @@ async function main() {
     },
   });
 
+  const india = await prisma.country.upsert({
+    where: { code: 'IN' },
+    update: {},
+    create: {
+      name: 'India',
+      code: 'IN',
+      slug: 'india',
+    },
+  });
+
+  const japan = await prisma.country.upsert({
+    where: { code: 'JP' },
+    update: {},
+    create: {
+      name: 'Japan',
+      code: 'JP',
+      slug: 'japan',
+    },
+  });
+
+  const usa = await prisma.country.upsert({
+    where: { code: 'US' },
+    update: {},
+    create: {
+      name: 'United States',
+      code: 'US',
+      slug: 'united-states',
+    },
+  });
+
   // 2. Destinations
   const paris = await prisma.destination.upsert({
     where: {
@@ -73,6 +103,38 @@ async function main() {
       description: 'The Eternal Destination',
     },
   });
+
+  const indianCities = [
+    { name: 'Mumbai', slug: 'mumbai', latitude: 19.0760, longitude: 72.8777, description: 'The City of Dreams' },
+    { name: 'Delhi', slug: 'delhi', latitude: 28.7041, longitude: 77.1025, description: 'The Capital City' },
+    { name: 'Bengaluru', slug: 'bengaluru', latitude: 12.9716, longitude: 77.5946, description: 'Silicon Valley of India' },
+    { name: 'Hyderabad', slug: 'hyderabad', latitude: 17.3850, longitude: 78.4867, description: 'City of Pearls' },
+    { name: 'Chennai', slug: 'chennai', latitude: 13.0827, longitude: 80.2707, description: 'Gateway to South India' },
+    { name: 'Kolkata', slug: 'kolkata', latitude: 22.5726, longitude: 88.3639, description: 'City of Joy' },
+    { name: 'Pune', slug: 'pune', latitude: 18.5204, longitude: 73.8567, description: 'Oxford of the East' },
+    { name: 'Jaipur', slug: 'jaipur', latitude: 26.9124, longitude: 75.7873, description: 'The Pink City' },
+    { name: 'Ahmedabad', slug: 'ahmedabad', latitude: 23.0225, longitude: 72.5714, description: 'Manchester of India' },
+    { name: 'Goa', slug: 'goa', latitude: 15.2993, longitude: 74.1240, description: 'Pearl of the Orient' },
+    { name: 'Agra', slug: 'agra', latitude: 27.1767, longitude: 78.0081, description: 'Home of the Taj Mahal' },
+    { name: 'Varanasi', slug: 'varanasi', latitude: 25.3176, longitude: 82.9739, description: 'The Spiritual Capital of India' },
+  ];
+
+  for (const city of indianCities) {
+    await prisma.destination.upsert({
+      where: {
+        countryId_slug: { countryId: india.id, slug: city.slug },
+      },
+      update: {},
+      create: {
+        countryId: india.id,
+        name: city.name,
+        slug: city.slug,
+        latitude: city.latitude,
+        longitude: city.longitude,
+        description: city.description,
+      },
+    });
+  }
 
   // 3. Places
   const placesToSeed = [

@@ -15,6 +15,8 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CSS } from '@dnd-kit/utilities';
 import { api } from '@/lib/api/client';
 import { IntelligenceCenter } from './IntelligenceCenter';
+import { ActivitySearchModal } from './ActivitySearchModal';
+import { getMockImage } from '@/lib/utils/images';
 import { PreparationChecklist } from './PreparationChecklist';
 import { AccommodationForm } from './AccommodationForm';
 import { TransportationForm } from './TransportationForm';
@@ -201,7 +203,7 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
       <div className="relative w-full h-[30vh] md:h-[45vh] rounded-b-[2rem] md:rounded-b-[3rem] overflow-hidden bg-slate-900 shadow-xl">
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-70"
-          style={{ backgroundImage: `url('${trip.coverImage || '/placeholder.jpg'}')` }}
+          style={{ backgroundImage: `url('${trip.coverImage || getMockImage(trip.stops[0]?.city || 'world', 1200, 800)}')` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
         
@@ -389,34 +391,13 @@ export function TripWorkspace({ tripId }: { tripId: string }) {
             )}
 
             {isAddingActivity ? (
-              <div className="bg-white border border-primary/20 p-5 rounded-2xl shadow-sm space-y-4">
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="col-span-1">
-                    <label className="text-xs text-slate-500 font-medium mb-1 block">Time</label>
-                    <Input type="time" value={newActivityTime} onChange={e => setNewActivityTime(e.target.value)} className="h-10" />
-                  </div>
-                  <div className="col-span-3">
-                    <label className="text-xs text-slate-500 font-medium mb-1 block">Title</label>
-                    <Input autoFocus value={newActivityTitle} onChange={e => setNewActivityTitle(e.target.value)} placeholder="e.g. Visit Eiffel Tower" className="h-10" />
-                  </div>
-                  <div className="col-span-4 mt-2">
-                    <label className="text-xs text-slate-500 font-medium mb-1 block">Select Destination</label>
-                    <select 
-                      className="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm bg-slate-50"
-                      value={selectedStopId || trip?.stops[0]?.id || ''}
-                      onChange={e => setSelectedStopId(e.target.value)}
-                    >
-                      {trip?.stops.map(s => <option key={s.id} value={s.id}>{s.city}, {s.country}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="ghost" onClick={() => setIsAddingActivity(false)}>Cancel</Button>
-                  <Button onClick={handleAddActivity} disabled={addActivityMutation.isPending} className="bg-primary hover:bg-primary/90 text-white">
-                    {addActivityMutation.isPending ? 'Saving...' : 'Save Activity'}
-                  </Button>
-                </div>
-              </div>
+              <ActivitySearchModal 
+                tripId={tripId} 
+                stopId={trip?.stops[0]?.id || ''} 
+                cityId={(trip?.stops[0] as any)?.cityId} 
+                cityName={trip?.stops[0]?.city}
+                onClose={() => setIsAddingActivity(false)} 
+              />
             ) : (
               activities.length > 0 && (
                 <button 

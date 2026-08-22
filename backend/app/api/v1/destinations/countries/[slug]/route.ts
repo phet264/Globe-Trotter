@@ -14,8 +14,12 @@ export async function GET(
       include: {
         destinations: {
           orderBy: { name: 'asc' },
-          take: 10,
+          take: 20,
+          include: {
+            country: true,
+          }
         },
+        _count: { select: { destinations: true } },
       },
     });
 
@@ -26,7 +30,14 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, data: country });
+    // Remap 'destinations' -> 'cities' to match frontend types
+    const { destinations, _count, ...rest } = country as any;
+    const normalized = {
+      ...rest,
+      cities: destinations,
+      _count: { cities: _count?.destinations ?? 0 },
+    };
+    return NextResponse.json({ success: true, data: normalized });
   } catch (error) {
     console.error('[COUNTRY_GET]', error);
     return NextResponse.json(

@@ -20,10 +20,16 @@ export async function GET(req: NextRequest) {
       prisma.country.count(),
     ]);
 
+    // Normalize: remap _count.destinations -> _count.cities to match frontend types
+    const normalized = countries.map(({ _count, ...rest }: any) => ({
+      ...rest,
+      _count: { cities: _count?.destinations ?? 0 },
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        items: countries,
+        items: normalized,
         pagination: {
           page,
           pageSize,

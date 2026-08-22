@@ -78,6 +78,7 @@ export interface Activity {
   category: string;
   estimatedCost: number;
   duration?: number;
+  imageUrl?: string;
   city?: City;
 }
 

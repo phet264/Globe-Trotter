@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { tripsApi } from '@/lib/api/trips';
 import { TripStop } from '@/lib/api/types';
 import Globe from '@/components/globe/Globe';
@@ -38,16 +38,11 @@ const tripSchema = z.object({
   path: ["endDate"]
 });
 
-type TripFormData = z.infer<typeof tripSchema>;
+import { useDebounce } from '@/lib/hooks/useDebounce';
+import { getMockImage } from '@/lib/utils/images';
+import { destinationsApi } from '@/lib/api/destinations';
 
-const CITIES = [
-  { id: 'city-1', city: 'Paris', country: 'France', lat: 48.8566, lng: 2.3522 },
-  { id: 'city-2', city: 'London', country: 'UK', lat: 51.5074, lng: -0.1278 },
-  { id: 'city-3', city: 'Tokyo', country: 'Japan', lat: 35.6762, lng: 139.6503 },
-  { id: 'city-4', city: 'New York', country: 'USA', lat: 40.7128, lng: -74.0060 },
-  { id: 'city-5', city: 'Rome', country: 'Italy', lat: 41.9028, lng: 12.4964 },
-  { id: 'city-6', city: 'Sydney', country: 'Australia', lat: -33.8688, lng: 151.2093 },
-];
+type TripFormData = z.infer<typeof tripSchema>;
 
 const INTERESTS = ['Food & Dining', 'Art & Culture', 'History', 'Nature & Outdoors', 'Nightlife', 'Shopping', 'Relaxation', 'Adventure'];
 
@@ -172,7 +167,21 @@ export function TripWizard() {
   }
 
   const stops = formValues.stops || [];
-  const filteredCities = CITIES.filter(c => c.city.toLowerCase().includes(searchQuery.toLowerCase()) || c.country.toLowerCase().includes(searchQuery.toLowerCase()));
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
+  const { data: searchResults, isLoading: isSearchLoading } = useQuery({
+    queryKey: ['search', debouncedQuery],
+    queryFn: () => destinationsApi.search(debouncedQuery),
+    enabled: debouncedQuery.length >= 2,
+  });
+
+  const displayCities = (debouncedQuery.length >= 2 && searchResults) ? searchResults.cities.map(c => ({
+    id: c.id,
+    city: c.name,
+    country: c.country?.name || '',
+    lat: c.latitude,
+    lng: c.longitude
+  })) : [];
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
@@ -208,38 +217,50 @@ export function TripWizard() {
                   </div>
                   
                   <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
-                    {filteredCities.map(city => {
-                      const isAdded = stops.some(s => s.city === city.city);
-                      return (
-                        <div key={city.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-slate-300 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                              <MapPin size={20} />
+                    {isSearchLoading ? (
+                      <div className="flex justify-center p-4"><Loader2 className="animate-spin text-slate-400" size={24} /></div>
+                    ) : debouncedQuery.length < 2 ? (
+                      <div className="text-center p-4 text-slate-500">Type at least 2 characters to search for a city</div>
+                    ) : displayCities.length === 0 ? (
+                      <div className="text-center p-4 text-slate-500">No cities found matching "{debouncedQuery}"</div>
+                    ) : (
+                      displayCities.map(city => {
+                        const isAdded = stops.some(s => s.city === city.city);
+                        const bgImage = getMockImage(city.city, 400, 200);
+                        return (
+                          <div key={city.id} className="relative overflow-hidden group flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-slate-300 transition-colors">
+                            <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity bg-cover bg-center" style={{ backgroundImage: `url('${bgImage}')` }} />
+                            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent" />
+                            
+                            <div className="relative flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary backdrop-blur-sm">
+                                <MapPin size={20} />
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-900 text-lg">{city.city}</div>
+                                <div className="text-sm font-medium text-slate-500">{city.country}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-medium text-slate-900">{city.city}</div>
-                              <div className="text-xs text-slate-500">{city.country}</div>
-                            </div>
+                            <Button 
+                              variant={isAdded ? "outline" : "default"} 
+                              size="sm" 
+                              onClick={() => {
+                                if (!isAdded) {
+                                  setValue('stops', [...stops, { ...city, id: `stop-${crypto.randomUUID()}` }]);
+                                  setFocusedLocation({ lat: city.lat, lng: city.lng });
+                                  trigger('stops');
+                                } else {
+                                  setValue('stops', stops.filter(s => s.city !== city.city));
+                                }
+                              }}
+                              className="relative z-10 rounded-full shadow-sm"
+                            >
+                              {isAdded ? 'Remove' : 'Add'}
+                            </Button>
                           </div>
-                          <Button 
-                            variant={isAdded ? "outline" : "default"} 
-                            size="sm" 
-                            onClick={() => {
-                              if (!isAdded) {
-                                setValue('stops', [...stops, { ...city, id: `stop-${crypto.randomUUID()}` }]);
-                                setFocusedLocation({ lat: city.lat, lng: city.lng });
-                                trigger('stops');
-                              } else {
-                                setValue('stops', stops.filter(s => s.city !== city.city));
-                              }
-                            }}
-                            className="rounded-full"
-                          >
-                            {isAdded ? 'Remove' : 'Add'}
-                          </Button>
-                        </div>
-                      )
-                    })}
+                        )
+                      })
+                    )}
                   </div>
                   {errors.stops && <p className="text-destructive text-sm mt-2">{errors.stops.message}</p>}
                 </div>
