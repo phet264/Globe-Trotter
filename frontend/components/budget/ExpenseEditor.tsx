@@ -63,7 +63,7 @@ export default function ExpenseEditor({ tripId, expense, onClose, onSave }: Expe
       if (error instanceof z.ZodError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const fieldErrors: any = {};
-        (error as any).errors.forEach((err: any) => {
+        error.issues.forEach((err) => {
           if (err.path[0]) fieldErrors[err.path[0]] = err.message;
         });
         setErrors(fieldErrors);

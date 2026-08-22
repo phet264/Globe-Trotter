@@ -9,8 +9,9 @@ import { MapPin, Calendar, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function UpcomingTripCard({ trip }: { trip: Trip }) {
-  const destinationText = trip.stops.length > 0 
-    ? `${trip.stops[0].city}, ${trip.stops[0].country}${trip.stops.length > 1 ? ` +${trip.stops.length - 1} more` : ''}`
+  const stops = trip.stops || [];
+  const destinationText = stops.length > 0 
+    ? `${stops[0].city}, ${stops[0].country}${stops.length > 1 ? ` +${stops.length - 1} more` : ''}`
     : 'No destinations yet';
 
   const daysLeft = trip.startDate ? formatDistanceToNow(parseISO(trip.startDate), { addSuffix: true }) : '';
@@ -79,7 +80,8 @@ export function UpcomingTripCard({ trip }: { trip: Trip }) {
 }
 
 export function TripCard({ trip }: { trip: Trip }) {
-  const destinationText = trip.stops.length > 0 ? trip.stops[0].city : 'Undecided';
+  const stops = trip.stops || [];
+  const destinationText = stops.length > 0 ? stops[0].city : 'Undecided';
   
   return (
     <Link href={`/trips/${trip.id}`} className="block">
@@ -99,7 +101,7 @@ export function TripCard({ trip }: { trip: Trip }) {
             <div>
               <div className="text-white/80 text-xs font-medium mb-1 truncate flex items-center gap-1.5">
                 <MapPin size={12} />
-                {destinationText} {trip.stops.length > 1 ? `+${trip.stops.length - 1}` : ''}
+                {destinationText} {stops.length > 1 ? `+${stops.length - 1}` : ''}
               </div>
               <h3 className="text-white font-bold text-lg leading-tight mb-1">{trip.name}</h3>
               <div className="text-white/70 text-xs">

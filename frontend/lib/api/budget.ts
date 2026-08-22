@@ -1,4 +1,5 @@
 import { BudgetSummary, Expense, ExpenseCategory } from './types';
+import { tripsApi } from './trips';
 
 // Mock Backend Storage for Expenses
 let MOCK_EXPENSES: Expense[] = [
@@ -47,12 +48,29 @@ export const budgetApi = {
     await delay(500);
     const tripExpenses = MOCK_EXPENSES.filter(e => e.tripId === tripId);
     
+    // Fetch the actual trip to get the user-defined budget and dates
+    let actualBudget = MOCK_TOTAL_BUDGET;
+    let tripDays = MOCK_TRIP_DAYS;
+    try {
+      const trip = await tripsApi.getTrip(tripId);
+      if (trip.budget) actualBudget = trip.budget;
+      
+      if (trip.startDate && trip.endDate) {
+        const start = new Date(trip.startDate);
+        const end = new Date(trip.endDate);
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        tripDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      }
+    } catch (err) {
+      console.warn("Could not fetch trip data for budget calculation", err);
+    }
+    
     const spent = tripExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const remaining = MOCK_TOTAL_BUDGET - spent;
-    const dailyAverage = spent / (MOCK_TRIP_DAYS || 1);
+    const remaining = actualBudget - spent;
+    const dailyAverage = spent / (tripDays || 1);
     
     let status: BudgetSummary['status'] = 'On track';
-    const percentSpent = spent / MOCK_TOTAL_BUDGET;
+    const percentSpent = actualBudget > 0 ? spent / actualBudget : 0;
     if (percentSpent < 0.7) status = 'Under budget';
     else if (percentSpent < 0.9) status = 'On track';
     else if (percentSpent <= 1.0) status = 'Near limit';
@@ -79,7 +97,7 @@ export const budgetApi = {
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return {
-      totalBudget: MOCK_TOTAL_BUDGET,
+      totalBudget: actualBudget,
       spent,
       remaining,
       dailyAverage,

@@ -12,7 +12,7 @@ const navItems = [
   { name: 'My Trips', href: '/trips', icon: Plane },
   { name: 'Explore', href: '/destinations', icon: Map },
   { name: 'Saved', href: '/saved', icon: Bookmark },
-  { name: 'Budget', href: '/trips/1/budget', icon: DollarSign },
+  { name: 'Budget', href: '/budget', icon: DollarSign },
   { name: 'Profile', href: '/profile', icon: User },
 ];
 
