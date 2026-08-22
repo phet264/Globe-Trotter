@@ -43,3 +43,60 @@ export interface ItineraryActivity {
   cost?: number;
   order: number;
 }
+
+export interface Country {
+  id: string;
+  name: string;
+  code: string;
+  slug: string;
+  cities?: City[];
+  _count?: {
+    cities?: number;
+  };
+}
+
+export interface City {
+  id: string;
+  countryId: string;
+  name: string;
+  slug: string;
+  latitude: number;
+  longitude: number;
+  description?: string;
+  country?: Country;
+  activities?: Activity[];
+  _count?: {
+    activities?: number;
+  };
+}
+
+export interface Activity {
+  id: string;
+  cityId: string;
+  name: string;
+  description?: string;
+  category: string;
+  estimatedCost: number;
+  duration?: number;
+  city?: City;
+}
+
+export interface SavedDestination {
+  id: string;
+  userId: string;
+  cityId: string;
+  city: City;
+  createdAt: string;
+}
+
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  pagination: PaginationMeta;
+}
