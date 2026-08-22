@@ -105,11 +105,14 @@ model Trip {
   id          String     @id @default(uuid())
   userId      String
   title       String
+  destination String     @default("TBD")
   description String?
   startDate   DateTime
   endDate     DateTime
+  travelers   Int        @default(1)
   budget      Decimal?   @db.Decimal(12, 2)
   currency    String?
+  coverImage  String?
   status      TripStatus @default(PLANNED)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -128,15 +131,17 @@ model Trip {
 model TripStop {
   id            String   @id @default(uuid())
   tripId        String
-  cityId        String
+  cityId        String?
   order         Int
+  title         String?
+  date          DateTime?
   arrivalDate   DateTime?
   departureDate DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  city          City     @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  city          City?    @relation(fields: [cityId], references: [id], onDelete: Restrict)
   activities    ItineraryActivity[]
 
   @@unique([tripId, order])
@@ -148,19 +153,26 @@ model TripStop {
 // 7. ITINERARY ACTIVITY
 // ---------------------------------------------------------
 model ItineraryActivity {
-  id          String    @id @default(uuid())
-  tripStopId  String
-  activityId  String
-  date        DateTime?
-  startTime   DateTime? @db.Time
-  endTime     DateTime? @db.Time
-  order       Int
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  tripStopId    String
+  activityId    String?
+  title         String?
+  description   String?
+  location      String?
+  category      String?
+  estimatedCost Decimal?  @db.Decimal(10, 2)
+  currency      String?
+  imageUrl      String?
+  date          DateTime?
+  startTime     DateTime? @db.Time
+  endTime       DateTime? @db.Time
+  order         Int
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  tripStop    TripStop  @relation(fields: [tripStopId], references: [id], onDelete: Cascade)
-  activity    Activity  @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  tripStop      TripStop  @relation(fields: [tripStopId], references: [id], onDelete: Cascade)
+  activity      Activity? @relation(fields: [activityId], references: [id], onDelete: Restrict)
 
   @@index([tripStopId])
   @@index([activityId])

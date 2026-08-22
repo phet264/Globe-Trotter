@@ -10,15 +10,20 @@ export const UserSchema = z.object({
 });
 
 export const TripSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
   title: z.string().min(1, "Trip title is required").max(100, "Trip title is too long"),
+  destination: z.string().min(1, "Destination is required"),
   description: z.string().max(500).optional(),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
-  status: z.enum(["planning", "upcoming", "ongoing", "completed"]),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  startDate: z.string(),
+  endDate: z.string(),
+  travelers: z.number().int().min(1),
+  budget: z.number().nonnegative().optional(),
+  currency: z.string().optional(),
+  coverImage: z.string().url().optional(),
+  status: z.enum(["planning", "upcoming", "ongoing", "completed"]).default("planning"),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
 });
 
 export const CountrySchema = z.object({
