@@ -37,29 +37,48 @@ export interface Trip {
   id: string;
   userId: string;
   title: string;
+  destination: string;
   description?: string;
   startDate: string;
   endDate: string;
+  travelers: number;
+  budget?: number;
+  currency?: string;
+  coverImage?: string;
   status: 'planning' | 'upcoming' | 'ongoing' | 'completed';
   createdAt: string;
   updatedAt: string;
+  tripStops?: TripStop[]; // nested data
 }
 
 export interface TripStop {
   id: string;
   tripId: string;
-  cityId: string;
+  cityId?: string;
   order: number;
+  title?: string;
+  date?: string;
   arrivalDate?: string;
   departureDate?: string;
+  activities?: ItineraryActivity[]; // nested data
 }
 
 export interface ItineraryActivity {
   id: string;
-  tripId: string;
-  activityId: string;
-  scheduledAt: string;
+  tripStopId: string;
+  activityId?: string;
+  title?: string;
+  description?: string;
+  location?: string;
+  category?: string;
+  estimatedCost?: number;
+  currency?: string;
+  imageUrl?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
   order: number;
+  notes?: string;
 }
 
 export interface Expense {
