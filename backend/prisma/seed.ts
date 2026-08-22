@@ -5,6 +5,17 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Start seeding...');
 
+  // 0. Mock User (Required for local development auth fallback)
+  await prisma.user.upsert({
+    where: { email: 'dev@globetrotter.test' },
+    update: {},
+    create: {
+      email: 'dev@globetrotter.test',
+      name: 'Local Developer',
+      passwordHash: 'dummy_hash_for_dev_only',
+    },
+  });
+
   // 1. Countries
   const france = await prisma.country.upsert({
     where: { code: 'FR' },

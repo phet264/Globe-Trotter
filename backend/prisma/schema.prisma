@@ -249,13 +249,13 @@ model Accommodation {
   tripId           String
   name             String
   address          String?
-  checkInDate      DateTime @db.Date
-  checkOutDate     DateTime @db.Date
+  checkInDate      DateTime 
+  checkOutDate     DateTime 
   checkInTime      String?  // e.g. "14:00"
   checkOutTime     String?  // e.g. "11:00"
   nights           Int
-  pricePerNight    Decimal? @db.Decimal(10, 2)
-  totalCost        Decimal  @db.Decimal(10, 2)
+  pricePerNight    Float?
+  totalCost        Float
   currency         String   @default("USD")
   guests           Int      @default(1)
   bookingReference String?
@@ -281,11 +281,11 @@ model Transportation {
   provider          String?
   departureLocation String
   arrivalLocation   String
-  departureDate     DateTime @db.Date
+  departureDate     DateTime 
   departureTime     String?  // e.g. "08:30"
-  arrivalDate       DateTime @db.Date
+  arrivalDate       DateTime 
   arrivalTime       String?  // e.g. "10:45"
-  cost              Decimal  @db.Decimal(10, 2)
+  cost              Float
   currency          String   @default("USD")
   bookingReference  String?
   notes             String?
