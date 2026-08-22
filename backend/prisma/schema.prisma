@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -87,8 +87,8 @@ model Activity {
   name          String
   description   String?
   category      String
-  tags          String[] // Phase 5
-  estimatedCost Decimal  @db.Decimal(10, 2)
+  tags          String?  // Phase 5 (stored as comma separated for SQLite)
+  estimatedCost Float
   duration      Int?     // duration in minutes
   latitude      Float?   // Phase 5
   longitude     Float?   // Phase 5
@@ -118,10 +118,10 @@ model Trip {
   startDate   DateTime
   endDate     DateTime
   travelers   Int        @default(1)
-  budget      Decimal?   @db.Decimal(12, 2)
+  budget      Float?
   currency    String?
   coverImage  String?
-  interests   String[]   // Phase 5
+  interests   String?    // Phase 5 (stored as comma separated for SQLite)
   status      TripStatus @default(PLANNED)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -169,12 +169,12 @@ model ItineraryActivity {
   description   String?
   location      String?
   category      String?
-  estimatedCost Decimal?  @db.Decimal(10, 2)
+  estimatedCost Float?
   currency      String?
   imageUrl      String?
   date          DateTime?
-  startTime     DateTime? @db.Time
-  endTime       DateTime? @db.Time
+  startTime     DateTime?
+  endTime       DateTime?
   order         Int
   notes         String?
   createdAt     DateTime  @default(now())
@@ -194,7 +194,7 @@ model Expense {
   id          String          @id @default(uuid())
   tripId      String
   category    ExpenseCategory
-  amount      Decimal         @db.Decimal(10, 2)
+  amount      Float
   currency    String
   description String?
   date        DateTime

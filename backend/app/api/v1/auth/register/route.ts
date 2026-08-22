@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     });
     
     return NextResponse.json(
-      successResponse({ user: newUser })
+      successResponse({ user: newUser, token: 'mock-jwt-token-backend' })
     );
     
   } catch (error) {

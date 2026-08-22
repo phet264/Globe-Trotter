@@ -7,40 +7,33 @@ export interface User {
   avatarUrl?: string;
 }
 
+const BASE_URL = 'http://localhost:3001/api/v1';
+
 export const authApi = {
   login: async (data: Record<string, unknown>) => {
-    // In a real implementation this hits the backend
-    // return api.post<{ user: User; token: string }>('/auth/login', data);
-    
-    // Simulate API delay and success for development
-    return new Promise<{ user: User; token: string }>((resolve, reject) => {
-      setTimeout(() => {
-        if (data.email === 'test@example.com' && data.password === 'password') {
-          resolve({
-            user: { id: '1', name: 'Test User', email: 'test@example.com' },
-            token: 'mock-jwt-token'
-          });
-        } else {
-          reject(new Error('Invalid email or password'));
-        }
-      }, 1000);
+    const res = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error?.message || 'Login failed');
+    return { user: json.data.user, token: json.data.token };
   },
   
   signup: async (data: Record<string, unknown>) => {
-    // return api.post<{ user: User; token: string }>('/auth/signup', data);
-    return new Promise<{ user: User; token: string }>((resolve) => {
-      setTimeout(() => {
-        resolve({
-          user: { id: '2', name: data.name as string, email: data.email as string },
-          token: 'mock-jwt-token'
-        });
-      }, 1000);
+    const res = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error?.message || 'Signup failed');
+    return { user: json.data.user, token: json.data.token };
   },
 
   logout: async () => {
-    // return api.post('/auth/logout');
+    // Just mock logout on the frontend for now, clearing the local token
     return new Promise<void>((resolve) => setTimeout(resolve, 500));
   },
 

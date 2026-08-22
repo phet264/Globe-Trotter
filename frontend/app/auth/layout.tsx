@@ -19,6 +19,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Dark overlay for better contrast of the central card against the background */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
+      {/* Absolute Back Button */}
+      <Link href="/" className="absolute top-6 left-6 z-50 inline-flex items-center justify-center h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all shadow-lg border border-white/20" aria-label="Back to home">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      </Link>
+
       {/* Main Card - auto height to fit content, with max-height to prevent viewport overflow */}
       <div className="relative z-10 w-full max-w-5xl bg-background rounded-[2rem] sm:rounded-[2.5rem] flex flex-col lg:flex-row shadow-2xl overflow-hidden h-auto lg:h-auto min-h-[500px] max-h-[90vh]">
         
