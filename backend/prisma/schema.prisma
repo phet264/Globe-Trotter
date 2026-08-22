@@ -6,3 +6,213 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ---------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------
+enum TripStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ExpenseCategory {
+  TRANSPORT
+  ACCOMMODATION
+  FOOD
+  ACTIVITY
+  OTHER
+}
+
+// ---------------------------------------------------------
+// 1. USER
+// ---------------------------------------------------------
+model User {
+  id                String             @id @default(uuid())
+  name              String
+  email             String             @unique
+  passwordHash      String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  trips             Trip[]
+  savedDestinations SavedDestination[]
+}
+
+// ---------------------------------------------------------
+// 2. COUNTRY
+// ---------------------------------------------------------
+model Country {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cities    City[]
+}
+
+// ---------------------------------------------------------
+// 3. CITY
+// ---------------------------------------------------------
+model City {
+  id          String   @id @default(uuid())
+  countryId   String
+  name        String
+  slug        String
+  latitude    Float
+  longitude   Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  country     Country  @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  activities  Activity[]
+  tripStops   TripStop[]
+  savedBy     SavedDestination[]
+
+  @@unique([countryId, slug])
+  @@index([slug])
+  @@index([countryId])
+}
+
+// ---------------------------------------------------------
+// 4. ACTIVITY
+// ---------------------------------------------------------
+model Activity {
+  id            String   @id @default(uuid())
+  cityId        String
+  name          String
+  description   String?
+  category      String
+  estimatedCost Decimal  @db.Decimal(10, 2)
+  duration      Int?     // duration in minutes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  city          City     @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  itineraryItems ItineraryActivity[]
+
+  @@index([cityId])
+}
+
+// ---------------------------------------------------------
+// 5. TRIP
+// ---------------------------------------------------------
+model Trip {
+  id          String     @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  budget      Decimal?   @db.Decimal(12, 2)
+  currency    String?
+  status      TripStatus @default(PLANNED)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tripStops   TripStop[]
+  expenses    Expense[]
+  sharedTrip  SharedTrip?
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------
+// 6. TRIP STOP
+// ---------------------------------------------------------
+model TripStop {
+  id            String   @id @default(uuid())
+  tripId        String
+  cityId        String
+  order         Int
+  arrivalDate   DateTime?
+  departureDate DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  city          City     @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  activities    ItineraryActivity[]
+
+  @@unique([tripId, order])
+  @@index([tripId])
+  @@index([cityId])
+}
+
+// ---------------------------------------------------------
+// 7. ITINERARY ACTIVITY
+// ---------------------------------------------------------
+model ItineraryActivity {
+  id          String    @id @default(uuid())
+  tripStopId  String
+  activityId  String
+  date        DateTime?
+  startTime   DateTime? @db.Time
+  endTime     DateTime? @db.Time
+  order       Int
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tripStop    TripStop  @relation(fields: [tripStopId], references: [id], onDelete: Cascade)
+  activity    Activity  @relation(fields: [activityId], references: [id], onDelete: Restrict)
+
+  @@index([tripStopId])
+  @@index([activityId])
+}
+
+// ---------------------------------------------------------
+// 8. EXPENSE
+// ---------------------------------------------------------
+model Expense {
+  id          String          @id @default(uuid())
+  tripId      String
+  category    ExpenseCategory
+  amount      Decimal         @db.Decimal(10, 2)
+  currency    String
+  description String?
+  date        DateTime
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  trip        Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([date])
+}
+
+// ---------------------------------------------------------
+// 9. SAVED DESTINATION
+// ---------------------------------------------------------
+model SavedDestination {
+  id        String   @id @default(uuid())
+  userId    String
+  cityId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cityId])
+  @@index([userId])
+  @@index([cityId])
+}
+
+// ---------------------------------------------------------
+// 10. SHARED TRIP
+// ---------------------------------------------------------
+model SharedTrip {
+  id        String    @id @default(uuid())
+  tripId    String    @unique
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  trip      Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
